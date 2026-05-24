@@ -48,6 +48,12 @@ const runtimePatch = String.raw`
     var p = (typeof path === 'function') ? path(id) : null;
     if(p){ Object.assign(p, specimenData[id]); }
   });
+  function timeGreeting(){
+    var hour = new Date().getHours();
+    if(hour < 12) return 'Good morning';
+    if(hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  }
   function glyphFor(p){
     if(isSaved(p.id)) return '♥';
     return (domains.find(function(d){return d[0]===p.d;})||[])[2] || '·';
@@ -69,7 +75,7 @@ const runtimePatch = String.raw`
     $('bars').innerHTML=pages.map(function(_,i){return '<span class="'+(i===0?'active':'')+'"></span>';}).join('');
     $('count').textContent='1/'+total;
     $('snap').innerHTML=pages.map(function(x){
-      if(x==='intro')return '<section class="today-page center"><div class="star">✦</div><div class="kicker ink">Daily specimens</div><h1>Good morning,<br>'+state.name.split(' ')[0]+'.</h1><p class="intro">Four small readings. Keep what sharpens the day.</p><div class="streak-line">Streak · Day 19</div></section>';
+      if(x==='intro')return '<section class="today-page center"><div class="star">✦</div><div class="kicker ink">Daily specimens</div><h1>'+timeGreeting()+',<br>'+state.name.split(' ')[0]+'.</h1><p class="intro">Four small readings. Keep what sharpens the day.</p><div class="streak-line">Streak · Day 19</div></section>';
       if(x==='close')return '<section class="today-page center"><div class="star">✦</div><h1>That is today.</h1><p class="intro">Come back tomorrow. The same hour, if you can. The mind keeps what you return to.</p><div class="streak-line">Streak · Day 20 begins tomorrow</div></section>';
       var p=path(x),heart=state.todayHearts.includes(x);
       return '<section class="today-page"><div style="display:flex;justify-content:space-between"><div class="kicker">'+domainName(p.d)+' · daily wisdom</div><button onclick="toggleTodayHeart(\''+p.id+'\')" style="color:var(--earth);font-size:24px">'+(heart?'♥':'♡')+'</button></div><div class="quote-mark">“</div><blockquote class="quote">'+p.q+'</blockquote><div class="author">'+p.author+'</div><p class="blurb">'+p.b+'</p></section>';
