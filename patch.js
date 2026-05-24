@@ -18,6 +18,20 @@
     };
     identity.appendChild(button);
   }
+  function scrollTabTop(id){
+    requestAnimationFrame(function(){
+      var view=document.getElementById(id);
+      if(view) view.scrollTo({top:0,left:0,behavior:'auto'});
+      if(id==='today'){
+        var snap=document.getElementById('snap');
+        if(snap) snap.scrollTo({top:0,left:0,behavior:'auto'});
+        var count=document.getElementById('count');
+        if(count) count.textContent='1/6';
+        var bars=document.getElementById('bars');
+        if(bars) Array.prototype.slice.call(bars.children).forEach(function(b,i){b.classList.toggle('active',i===0);});
+      }
+    });
+  }
   function installPullRefresh(){
     var phone=document.querySelector('.phone');
     if(!phone||document.getElementById('pullRefresh'))return;
@@ -95,6 +109,7 @@
     baseTab(id);
     var phone=document.querySelector('.phone');
     if(phone)phone.classList.toggle('self-mode',id==='self');
+    scrollTabTop(id);
   };
   renderSelf();
   installPullRefresh();
