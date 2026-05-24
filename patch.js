@@ -1,6 +1,26 @@
 (function(){
   var names=['Aureus Socrates','Ludicus Seneca','Nebulosus Plato','Alatus Aristotle','Mellitus Marcus','Velutinus Cicero','Lunaris Epicurus','Sylvanus Heraclitus','Mirabilis Hypatia','Fabulosus Diogenes','Argenteus Plotinus','Serenus Spinoza','Curiosus Zeno','Nocturnus Nietzsche','Floridus Laozi','Ventulus Zhuangzi'];
   function slug(text){return text.toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,18)||'sharper'}
+  function dayStamp(offset){var d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+(offset||0));return d.toISOString().slice(0,10)}
+  function daysBetween(a,b){return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000)}
+  function ensureUsage(){
+    var today=dayStamp(0), yesterday=dayStamp(-1);
+    var hadPriorState=!!localStorage.sharper_beta;
+    if(!Array.isArray(state.activeDays)||!state.activeDays.length){
+      state.activeDays=hadPriorState?[yesterday,today]:[today];
+    }
+    if(state.activeDays.indexOf(today)<0)state.activeDays.push(today);
+    state.activeDays=Array.from(new Set(state.activeDays)).sort();
+    saveRaw();
+  }
+  function saveRaw(){localStorage.sharper_beta=JSON.stringify(state)}
+  function streakCount(){
+    ensureUsage();
+    var set={};state.activeDays.forEach(function(d){set[d]=true});
+    var count=0,cursor=dayStamp(0);
+    while(set[cursor]){count++;var d=new Date(cursor+'T00:00:00');d.setDate(d.getDate()-1);cursor=d.toISOString().slice(0,10)}
+    return count||1;
+  }
   function enhanceSelf(){
     var identity=document.querySelector('.self .identity');
     if(!identity||document.getElementById('nameGen'))return;
@@ -17,6 +37,23 @@
       renderSelf();
     };
     identity.appendChild(button);
+  }
+  function enhanceStreakUI(){
+    var streak=streakCount();
+    var stat=document.getElementById('streakStat');
+    if(stat)stat.textContent=streak;
+    var lines=document.querySelectorAll('.streak-line');
+    Array.prototype.slice.call(lines).forEach(function(line,i){line.textContent=i===0?'Streak · Day '+streak:'Streak · Day '+(streak+1)+' begins tomorrow'});
+    var days=document.getElementById('days');
+    if(days){
+      var set={};state.activeDays.forEach(function(d){set[d]=true});
+      days.innerHTML=Array.from({length:21},function(_,i){
+        var offset=i-20;
+        var date=dayStamp(offset);
+        if(i===20)return '<span class="todaydot"><i class="dot done"></i></span>';
+        return '<i class="dot '+(set[date]?'done':'')+'"></i>';
+      }).join('');
+    }
   }
   function scrollTabTop(id){
     requestAnimationFrame(function(){
@@ -102,15 +139,20 @@
     },{passive:true});
     phone.addEventListener('touchcancel',function(){active=false;armed=false;resetSoon(false)},{passive:true});
   }
+  ensureUsage();
   var baseRenderSelf=renderSelf;
-  renderSelf=function(){baseRenderSelf();enhanceSelf()};
+  renderSelf=function(){baseRenderSelf();enhanceSelf();enhanceStreakUI()};
+  var baseRenderToday=renderToday;
+  renderToday=function(){baseRenderToday();enhanceStreakUI()};
   var baseTab=tab;
   tab=function(id){
     baseTab(id);
     var phone=document.querySelector('.phone');
     if(phone)phone.classList.toggle('self-mode',id==='self');
     scrollTabTop(id);
+    enhanceStreakUI();
   };
+  renderToday();
   renderSelf();
   installPullRefresh();
 })();
