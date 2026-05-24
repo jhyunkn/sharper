@@ -3,6 +3,13 @@
   function slug(text){return text.toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,18)||'sharper'}
   function dayStamp(offset){var d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+(offset||0));return d.toISOString().slice(0,10)}
   function daysBetween(a,b){return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000)}
+  function currentGreeting(){var h=new Date().getHours();return h<12?'Good morning':h<18?'Good afternoon':'Good evening'}
+  function applyGreeting(){
+    var intro=document.querySelector('#snap .today-page.center h1');
+    if(!intro)return;
+    var first=(state.name||'Woopie').split(' ')[0];
+    intro.innerHTML=currentGreeting()+',<br>'+first+'.';
+  }
   function ensureUsage(){
     var today=dayStamp(0), yesterday=dayStamp(-1);
     var hadPriorState=!!localStorage.sharper_beta;
@@ -35,6 +42,7 @@
       state.user=slug(next);
       save();
       renderSelf();
+      applyGreeting();
     };
     identity.appendChild(button);
   }
@@ -54,6 +62,7 @@
         return '<i class="dot '+(set[date]?'done':'')+'"></i>';
       }).join('');
     }
+    applyGreeting();
   }
   function scrollTabTop(id){
     requestAnimationFrame(function(){
@@ -66,6 +75,7 @@
         if(count) count.textContent='1/6';
         var bars=document.getElementById('bars');
         if(bars) Array.prototype.slice.call(bars.children).forEach(function(b,i){b.classList.toggle('active',i===0);});
+        applyGreeting();
       }
     });
   }
@@ -109,7 +119,7 @@
       label.textContent='Refreshing';
       phone.classList.add('pull-settle');
       phone.style.setProperty('--contentLag','28px');
-      try{renderToday();renderLibrary();renderSelf()}catch(e){}
+      try{renderToday();renderLibrary();renderSelf();applyGreeting()}catch(e){}
       setTimeout(function(){indicator.className='pull-refresh on done';label.textContent='Updated'},460);
       setTimeout(function(){resetSoon(true)},860);
     }
@@ -141,9 +151,9 @@
   }
   ensureUsage();
   var baseRenderSelf=renderSelf;
-  renderSelf=function(){baseRenderSelf();enhanceSelf();enhanceStreakUI()};
+  renderSelf=function(){baseRenderSelf();enhanceSelf();enhanceStreakUI();applyGreeting()};
   var baseRenderToday=renderToday;
-  renderToday=function(){baseRenderToday();enhanceStreakUI()};
+  renderToday=function(){baseRenderToday();enhanceStreakUI();applyGreeting()};
   var baseTab=tab;
   tab=function(id){
     baseTab(id);
@@ -151,8 +161,10 @@
     if(phone)phone.classList.toggle('self-mode',id==='self');
     scrollTabTop(id);
     enhanceStreakUI();
+    applyGreeting();
   };
   renderToday();
   renderSelf();
+  applyGreeting();
   installPullRefresh();
 })();
