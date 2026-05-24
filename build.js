@@ -24,9 +24,9 @@ const readerTuning = String.raw`/* Museum specimen format */
 /* Library as gallery */
 .library{padding-left:34px!important;padding-right:34px!important}
 .library .paths{margin-top:56px!important}
-.library .row{grid-template-columns:22px minmax(0,1fr) 18px!important;gap:18px!important;padding:25px 0!important;border-bottom:1px solid rgba(26,23,20,.38)!important}
-.library .heart{width:22px!important;height:22px!important;display:grid!important;place-items:center!important;align-self:start!important;margin-top:2px!important;font-size:13px!important;line-height:1!important;letter-spacing:-.06em!important;white-space:nowrap!important;color:var(--earth)!important}
-.library .lib-glyph{display:inline-block!important;font-family:var(--mono)!important;font-size:12px!important;line-height:1!important;transform:scale(.82)!important;transform-origin:center!important;white-space:nowrap!important}
+.library .row{grid-template-columns:24px minmax(0,1fr) 18px!important;gap:17px!important;padding:25px 0!important;border-bottom:1px solid rgba(26,23,20,.38)!important}
+.library .heart{width:24px!important;height:22px!important;display:grid!important;place-items:center!important;align-self:start!important;margin-top:2px!important;font-size:12px!important;line-height:1!important;letter-spacing:-.09em!important;white-space:nowrap!important;color:var(--earth)!important;overflow:visible!important}
+.library .lib-glyph{display:inline-flex!important;align-items:center!important;justify-content:center!important;font-family:var(--mono)!important;font-size:11px!important;line-height:1!important;letter-spacing:-.12em!important;transform:scale(.78)!important;transform-origin:center!important;white-space:nowrap!important;word-break:keep-all!important;min-width:24px!important;overflow:visible!important}
 .library .row-meta{font-size:8px!important;letter-spacing:.24em!important;color:rgba(139,126,110,.82)!important}
 .library .row-title{font-size:29px!important;line-height:1!important;margin-top:14px!important;letter-spacing:-.01em!important}
 .library .row-title.compact-title{font-size:26px!important}
@@ -44,7 +44,6 @@ const runtimePatch = String.raw`
   });
   function glyphFor(p){
     if(isSaved(p.id)) return '♥';
-    if(p.d==='communication') return '○';
     return (domains.find(function(d){return d[0]===p.d;})||[])[2] || '·';
   }
   renderLibrary = function(){
