@@ -4,19 +4,24 @@ fs.mkdirSync('dist', { recursive: true });
 let h = fs.readFileSync('index.html', 'utf8');
 
 const css = String.raw`
+html,body,#app,.screen,.tab,.library{max-width:100%!important;overflow-x:hidden!important;touch-action:pan-y!important}
+*{box-sizing:border-box!important}
 .top-progress{position:sticky!important;top:40px!important;z-index:20!important;margin:0 28px!important;border:1px solid var(--ruleSoft)!important;border-radius:999px!important;background:rgba(239,234,224,.86)!important;backdrop-filter:blur(14px)!important;padding:12px 20px!important}
-.snap{height:100%!important;overflow-y:auto!important;scroll-snap-type:y proximity!important;-webkit-overflow-scrolling:touch!important;scroll-behavior:smooth!important;overscroll-behavior-y:contain!important}
+.snap{height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;scroll-snap-type:y proximity!important;-webkit-overflow-scrolling:touch!important;scroll-behavior:smooth!important;overscroll-behavior-y:contain!important;touch-action:pan-y!important}
 .lib-head{display:none!important}
 .library{padding-top:calc(32px + env(safe-area-inset-top))!important}
-.library .search{margin-top:0!important}
+.library .search{margin-top:0!important;max-width:100%!important;overflow:hidden!important}
 .library .search input{width:100%!important;border:0!important;outline:0!important;background:transparent!important;font-family:var(--mono)!important;font-size:10px!important;letter-spacing:.14em!important;text-transform:uppercase!important;color:var(--warm)!important}
-.library .filters{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:18px!important;margin-top:22px!important;border-top:1px solid var(--ruleSoft)!important;border-bottom:1px solid var(--ruleSoft)!important;padding:12px 0 8px!important;overflow:visible!important;text-align:left!important;flex-wrap:nowrap!important}
-.library .filters button{width:auto!important;flex:0 0 auto!important;font-family:var(--mono)!important;font-size:10px!important;letter-spacing:.14em!important;text-transform:uppercase!important;text-align:left!important;white-space:nowrap!important;color:rgba(26,23,20,.58)!important;padding:0 0 5px!important;border-bottom:1px solid transparent!important}
+.library .filters{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;align-items:end!important;justify-content:stretch!important;gap:6px!important;width:100%!important;max-width:100%!important;margin-top:20px!important;border-top:1px solid var(--ruleSoft)!important;border-bottom:1px solid var(--ruleSoft)!important;padding:12px 0 8px!important;overflow:hidden!important;text-align:left!important}
+.library .filters button{min-width:0!important;width:100%!important;max-width:100%!important;display:block!important;font-family:var(--mono)!important;font-size:8px!important;letter-spacing:.08em!important;text-transform:uppercase!important;text-align:left!important;white-space:normal!important;line-height:1.15!important;color:rgba(26,23,20,.58)!important;padding:0 0 5px!important;border-bottom:1px solid transparent!important;overflow-wrap:anywhere!important}
 .library .filters button.on{color:var(--earth)!important;border-bottom-color:var(--earth)!important}
-.filter-actions{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:24px!important;margin-top:8px!important;text-align:left!important}
-.saved-toggle{display:inline-flex!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;margin:0!important;padding:0 0 5px!important;font-family:var(--mono)!important;font-size:10px!important;letter-spacing:.14em!important;text-transform:uppercase!important;color:rgba(26,23,20,.58)!important;border-bottom:1px solid transparent!important;text-align:left!important}
+.filter-actions{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:24px!important;margin-top:8px!important;text-align:left!important;max-width:100%!important;overflow:hidden!important}
+.saved-toggle{display:inline-flex!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;margin:0!important;padding:0 0 5px!important;font-family:var(--mono)!important;font-size:9px!important;letter-spacing:.11em!important;text-transform:uppercase!important;color:rgba(26,23,20,.58)!important;border-bottom:1px solid transparent!important;text-align:left!important}
 .filter-actions .saved-toggle.on{color:var(--earth)!important;border-bottom-color:var(--earth)!important}
 .library-note{margin-top:18px!important;max-width:310px!important;font-family:var(--serif)!important;font-style:italic!important;font-size:16px!important;line-height:1.45!important;color:var(--warm)!important}
+#paths,.row,.row>*{max-width:100%!important;overflow-x:hidden!important}
+.row{grid-template-columns:28px minmax(0,1fr) 24px!important}
+.row-title,.row-blurb,.row-meta{min-width:0!important;overflow-wrap:anywhere!important}
 .reader-section:first-of-type{padding-bottom:36px!important}
 .reader-section:first-of-type p{font-size:22px!important;line-height:1.62!important;margin:22px 0!important}
 .orig-btn{margin-top:22px!important;border-bottom:1px solid var(--earth)!important;font-family:var(--mono)!important;font-size:9px!important;text-transform:uppercase!important;letter-spacing:.16em!important;color:var(--earth)!important;padding-bottom:5px!important}
@@ -66,11 +71,7 @@ const runtime = String.raw`
   };
 
   window.originalText = function(id){
-    return {
-      'wu-wei':'道常無為而無不為。',
-      'zhuangzi-usefulness':'人皆知有用之用，而莫知無用之用也。',
-      'amor-fati':'Meine Formel für die Größe am Menschen ist amor fati.'
-    }[id] || '';
+    return {'wu-wei':'道常無為而無不為。','zhuangzi-usefulness':'人皆知有用之用，而莫知無用之用也。','amor-fati':'Meine Formel für die Größe am Menschen ist amor fati.'}[id] || '';
   };
   window.toggleOriginal = function(){ var el=$('origText'); if(el) el.classList.toggle('on'); };
   window.openAuthorSaved = function(author){ state.savedOnly=true; state.filter='all'; persist(); tab('library'); setTimeout(function(){ $('search').value=author; renderLibrary(); },0); };
@@ -102,10 +103,24 @@ const runtime = String.raw`
     };
   };
 
+  function applyFilter(domainId){
+    state.filter = domainId;
+    state.savedOnly = false;
+    persist();
+    renderLibrary();
+  }
+  window.applyFilter = applyFilter;
+
   window.renderLibrary = function(){
-    $('filters').innerHTML = domains.filter(function(d){return d[0]!=='all'}).map(function(d){ return '<button class="'+(state.filter===d[0]?'on':'')+'" onclick="state.filter=&quot;'+d[0]+'&quot;;persist();renderLibrary()">'+d[1]+'</button>'; }).join('');
-    var st=$('savedToggle'); if(st){ st.innerHTML='Show saved'; st.classList.toggle('on',state.savedOnly); st.onclick=function(){ state.savedOnly=true; persist(); renderLibrary(); }; }
-    var clear=$('clearFilter'); if(clear){ clear.onclick=function(){ state.savedOnly=false; state.filter='all'; $('search').value=''; persist(); renderLibrary(); }; }
+    var domainList = domains.filter(function(d){return d[0] !== 'all'});
+    $('filters').innerHTML = domainList.map(function(d){ return '<button type="button" class="'+(state.filter===d[0]?'on':'')+'" data-domain="'+d[0]+'">'+d[1]+'</button>'; }).join('');
+    Array.prototype.slice.call($('filters').querySelectorAll('button')).forEach(function(btn){
+      btn.addEventListener('click', function(e){ e.preventDefault(); applyFilter(btn.getAttribute('data-domain')); });
+    });
+    var st=$('savedToggle');
+    if(st){ st.innerHTML='Show saved'; st.classList.toggle('on',state.savedOnly); st.onclick=function(){ state.savedOnly=true; persist(); renderLibrary(); }; }
+    var clear=$('clearFilter');
+    if(clear){ clear.onclick=function(){ state.savedOnly=false; state.filter='all'; $('search').value=''; persist(); renderLibrary(); }; }
     var q=$('search').value.toLowerCase();
     var arr=paths.filter(function(p){ return (state.filter==='all'||p.d===state.filter) && (!state.savedOnly||isSaved(p.id)) && (!q||[p.t,p.b,p.q,sourceText(p),p.author,domainName(p.d)].join(' ').toLowerCase().includes(q)); });
     $('paths').innerHTML=arr.map(function(p){ return '<article class="row"><button style="color:var(--earth)" onclick="toggleSave(&quot;'+p.id+'&quot;)">'+(isSaved(p.id)?'♥':domains.find(function(d){return d[0]===p.d})[2])+'</button><button onclick="openReader(&quot;'+p.id+'&quot;)" style="text-align:left"><div class="row-meta">'+p.m+' min · '+domainName(p.d)+'</div><div class="row-title">'+p.t+'</div><div class="row-blurb">'+p.b+'</div></button><button onclick="openReader(&quot;'+p.id+'&quot;)">→</button></article>'; }).join('');
