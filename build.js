@@ -21,9 +21,9 @@ h = h.replace('Sharper is currently in beta. This version records a real local s
 
 // Top alignment and language.
 h = h.replace(/\.top-progress\{[^}]*\}/, ".top-progress{position:sticky;top:40px;z-index:20;margin:0 28px;border:1px solid var(--ruleSoft);border-radius:999px;background:rgba(239,234,224,.86);backdrop-filter:blur(14px);padding:12px 20px}");
-h = h.replace(/\.lib-head\{[^}]*\}/, ".lib-head{display:flex;gap:14px;align-items:center;margin-top:0}");
+h = h.replace(/\.lib-head\{[^}]*\}/, ".lib-head{display:flex;gap:14px;align-items:center;margin:40px 28px 0;padding:12px 20px;border:1px solid var(--ruleSoft);border-radius:999px;background:rgba(239,234,224,.86);backdrop-filter:blur(14px)}");
 h = h.replace('Today’s voices', 'Daily specimens');
-h = h.replace('<div class="lib-head"><span>✶</span><div class="kicker ink">Four domains, one mind</div>', '<div class="lib-head"><span style="color:var(--earth)">✦</span><div class="kicker ink">Sharper</div>');
+h = h.replace('<div class="lib-head"><span>✶</span><div class="kicker ink">Four domains, one mind</div>', '<div class="lib-head"><span class="brand"><i>✦</i>Sharper</span><div class="rule"></div><div class="counter">4 domains, 1 mind</div>');
 
 // Library tab refinements.
 h = h.replace(/\.search input\{[^}]*\}/, ".search input{width:100%;border:0;outline:0;background:transparent;font-family:var(--mono);font-size:10px!important;letter-spacing:.14em;text-transform:uppercase;color:var(--warm)}");
