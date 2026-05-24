@@ -3,6 +3,8 @@ const fs = require('fs');
 fs.mkdirSync('dist', { recursive: true });
 let h = fs.readFileSync('index.html', 'utf8');
 
+h = h.replace('<div class="account"><div class="kicker ink">Account</div><p class="lead">Your recent interaction history, saved quotes, votes, and notes shape what Sharper shows next.</p><button class="row" style="display:flex;justify-content:space-between"><span class="row-meta">Settings & subscription</span><span class="arrow">→</span></button></div>', '<div class="account"><div class="kicker ink">Note from designer</div><p class="lead">Sharper is designed as a small museum for the mind: one carefully chosen specimen at a time, with context, source, and a practical move you can carry into the day. It is built to replace the reflex of scrolling with the slower pleasure of becoming more precise.</p></div>');
+
 const readerTuning = String.raw`/* Museum specimen format */
 .reader-head{padding:14px 24px!important;grid-template-columns:38px 1fr 38px!important}
 .reader-title{font-size:9px!important;letter-spacing:.20em!important}
