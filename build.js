@@ -21,6 +21,17 @@ const readerTuning = String.raw`/* Museum specimen format */
 .deploy-block{border-top:1px solid var(--soft);padding-top:20px;margin-top:24px}
 .reader-section{margin-top:24px!important;padding-top:22px!important}
 .reader-section p{font-size:18px!important;line-height:1.46!important;margin:14px 0!important}
+/* Library as gallery */
+.library{padding-left:34px!important;padding-right:34px!important}
+.library .paths{margin-top:56px!important}
+.library .row{grid-template-columns:22px minmax(0,1fr) 18px!important;gap:18px!important;padding:25px 0!important;border-bottom:1px solid rgba(26,23,20,.38)!important}
+.library .heart{width:22px!important;height:22px!important;display:grid!important;place-items:center!important;align-self:start!important;margin-top:2px!important;font-size:13px!important;line-height:1!important;letter-spacing:-.06em!important;white-space:nowrap!important;color:var(--earth)!important}
+.library .lib-glyph{display:inline-block!important;font-family:var(--mono)!important;font-size:12px!important;line-height:1!important;transform:scale(.82)!important;transform-origin:center!important;white-space:nowrap!important}
+.library .row-meta{font-size:8px!important;letter-spacing:.24em!important;color:rgba(139,126,110,.82)!important}
+.library .row-title{font-size:29px!important;line-height:1!important;margin-top:14px!important;letter-spacing:-.01em!important}
+.library .row-title.compact-title{font-size:26px!important}
+.library .row-blurb{font-size:16px!important;line-height:1.42!important;margin-top:10px!important;color:rgba(139,126,110,.92)!important}
+.library .arrow{font-size:29px!important;line-height:1!important;align-self:center!important;color:rgba(26,23,20,.7)!important}
 `;
 
 const runtimePatch = String.raw`
@@ -31,6 +42,11 @@ const runtimePatch = String.raw`
     var p = (typeof path === 'function') ? path(id) : null;
     if(p){ Object.assign(p, specimenData[id]); }
   });
+  function glyphFor(p){
+    if(isSaved(p.id)) return '♥';
+    if(p.d==='communication') return '○';
+    return (domains.find(function(d){return d[0]===p.d;})||[])[2] || '·';
+  }
   renderLibrary = function(){
     var q=$('search').value.toLowerCase();
     $('filters').innerHTML=domains.map(function(d){return '<button type="button" class="'+(state.filter===d[0]?'on':'')+'" data-domain="'+d[0]+'">'+d[1]+'</button>';}).join('');
@@ -40,7 +56,7 @@ const runtimePatch = String.raw`
     $('savedToggle').onclick=function(){state.savedOnly=true;save();renderLibrary();};
     $('clearFilter').onclick=function(){state.savedOnly=false;state.filter='all';$('search').value='';save();renderLibrary();};
     var arr=paths.filter(function(p){return (state.filter==='all'||p.d===state.filter)&&(!state.savedOnly||isSaved(p.id))&&(!q||[p.t,p.b,p.q,p.author,domainName(p.d)].join(' ').toLowerCase().includes(q));});
-    $('paths').innerHTML=arr.map(function(p){return '<article class="row"><button class="heart" onclick="toggleSave(\''+p.id+'\')">'+(isSaved(p.id)?'♥':(domains.find(function(d){return d[0]===p.d;})||[])[2])+'</button><button onclick="openReader(\''+p.id+'\')" style="text-align:left;min-width:0"><div class="row-meta">'+p.m+' min · '+domainName(p.d)+'</div><div class="row-title '+(p.id==='manage-up'?'compact-title':'')+'">'+p.t+'</div><div class="row-blurb">'+p.b+'</div></button><button class="arrow" onclick="openReader(\''+p.id+'\')">→</button></article>';}).join('');
+    $('paths').innerHTML=arr.map(function(p){return '<article class="row"><button class="heart" onclick="toggleSave(\''+p.id+'\')"><span class="lib-glyph">'+glyphFor(p)+'</span></button><button onclick="openReader(\''+p.id+'\')" style="text-align:left;min-width:0"><div class="row-meta">'+p.m+' min · '+domainName(p.d)+'</div><div class="row-title '+(p.id==='manage-up'?'compact-title':'')+'">'+p.t+'</div><div class="row-blurb">'+p.b+'</div></button><button class="arrow" onclick="openReader(\''+p.id+'\')">→</button></article>';}).join('');
   };
   renderToday = function(){
     var pages=['intro'].concat(today).concat(['close']);
