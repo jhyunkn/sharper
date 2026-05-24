@@ -4,54 +4,132 @@ fs.mkdirSync('dist', { recursive: true });
 let h = fs.readFileSync('index.html', 'utf8');
 
 const css = String.raw`
-:root{--safe-bottom:env(safe-area-inset-bottom);--safe-top:env(safe-area-inset-top)}
-html,body,#root{overscroll-behavior-y:none}.phone{isolation:isolate}.view{scrollbar-width:none}.view::-webkit-scrollbar{display:none}
-.top-progress{position:sticky!important;top:calc(18px + var(--safe-top))!important;z-index:20!important;margin:0 28px!important;border:1px solid var(--ruleSoft)!important;border-radius:999px!important;background:rgba(239,234,224,.86)!important;backdrop-filter:blur(14px)!important;padding:12px 20px!important}
-.snap{height:100%!important;overflow-y:auto!important;scroll-snap-type:y mandatory!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior-y:contain!important;scrollbar-width:none}.snap::-webkit-scrollbar{display:none}
-.today-page{min-height:100%!important;scroll-snap-align:start!important;scroll-snap-stop:always!important;padding:calc(88px + var(--safe-top)) 44px calc(126px + var(--safe-bottom))!important}.today-page:first-child{padding-top:calc(112px + var(--safe-top))!important}.center{text-align:center!important}
-.lib-head{display:none!important}.library{padding-top:calc(32px + var(--safe-top))!important}.library .search{margin-top:0!important}.library .search input{width:100%!important;border:0!important;outline:0!important;background:transparent!important;font-family:var(--mono)!important;font-size:10px!important;letter-spacing:.14em!important;text-transform:uppercase!important;color:var(--warm)!important}
-.library .filters{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:18px!important;margin-top:22px!important;border-top:1px solid var(--ruleSoft)!important;border-bottom:1px solid var(--ruleSoft)!important;padding:12px 0 8px!important;overflow:visible!important;text-align:left!important;flex-wrap:nowrap!important}.library .filters button{width:auto!important;flex:0 0 auto!important;font-family:var(--mono)!important;font-size:10px!important;letter-spacing:.14em!important;text-transform:uppercase!important;text-align:left!important;white-space:nowrap!important;color:rgba(26,23,20,.58)!important;padding:0 0 5px!important;border-bottom:1px solid transparent!important}.library .filters button.on{color:var(--earth)!important;border-bottom-color:var(--earth)!important}
-.filter-actions{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:24px!important;margin-top:8px!important;text-align:left!important}.saved-toggle{display:inline-flex!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;margin:0!important;padding:0 0 5px!important;font-family:var(--mono)!important;font-size:10px!important;letter-spacing:.14em!important;text-transform:uppercase!important;color:rgba(26,23,20,.58)!important;border-bottom:1px solid transparent!important;text-align:left!important}.filter-actions .saved-toggle.on{color:var(--earth)!important;border-bottom-color:var(--earth)!important}
-.library-note{margin-top:18px!important;max-width:310px!important;font-family:var(--serif)!important;font-style:italic!important;font-size:16px!important;line-height:1.45!important;color:var(--warm)!important}.paths{margin-top:30px!important}.reader{overscroll-behavior-y:contain}.reader-section:first-of-type{padding-bottom:36px!important}.reader-section:first-of-type p{font-size:22px!important;line-height:1.62!important;margin:22px 0!important}
-.orig-btn{margin-top:22px!important;border-bottom:1px solid var(--earth)!important;font-family:var(--mono)!important;font-size:9px!important;text-transform:uppercase!important;letter-spacing:.16em!important;color:var(--earth)!important;padding-bottom:5px!important}.orig-text{display:none!important;margin-top:18px!important;font-family:var(--serif)!important;font-size:22px!important;line-height:1.45!important;color:var(--ink)!important}.orig-text.on{display:block!important}.authors .author-row{cursor:pointer!important}.settings,.close{font-family:var(--serif)!important;font-size:28px!important}.close{transform:rotate(45deg)!important}
+.top-progress{position:sticky!important;top:40px!important;z-index:20!important;margin:0 28px!important;border:1px solid var(--ruleSoft)!important;border-radius:999px!important;background:rgba(239,234,224,.86)!important;backdrop-filter:blur(14px)!important;padding:12px 20px!important}
+.snap{height:100%!important;overflow-y:auto!important;scroll-snap-type:y proximity!important;-webkit-overflow-scrolling:touch!important;scroll-behavior:smooth!important;overscroll-behavior-y:contain!important}
+.lib-head{display:none!important}
+.library{padding-top:calc(32px + env(safe-area-inset-top))!important}
+.library .search{margin-top:0!important}
+.library .search input{width:100%!important;border:0!important;outline:0!important;background:transparent!important;font-family:var(--mono)!important;font-size:10px!important;letter-spacing:.14em!important;text-transform:uppercase!important;color:var(--warm)!important}
+.library .filters{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:18px!important;margin-top:22px!important;border-top:1px solid var(--ruleSoft)!important;border-bottom:1px solid var(--ruleSoft)!important;padding:12px 0 8px!important;overflow:visible!important;text-align:left!important;flex-wrap:nowrap!important}
+.library .filters button{width:auto!important;flex:0 0 auto!important;font-family:var(--mono)!important;font-size:10px!important;letter-spacing:.14em!important;text-transform:uppercase!important;text-align:left!important;white-space:nowrap!important;color:rgba(26,23,20,.58)!important;padding:0 0 5px!important;border-bottom:1px solid transparent!important}
+.library .filters button.on{color:var(--earth)!important;border-bottom-color:var(--earth)!important}
+.filter-actions{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:24px!important;margin-top:8px!important;text-align:left!important}
+.saved-toggle{display:inline-flex!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;margin:0!important;padding:0 0 5px!important;font-family:var(--mono)!important;font-size:10px!important;letter-spacing:.14em!important;text-transform:uppercase!important;color:rgba(26,23,20,.58)!important;border-bottom:1px solid transparent!important;text-align:left!important}
+.filter-actions .saved-toggle.on{color:var(--earth)!important;border-bottom-color:var(--earth)!important}
+.library-note{margin-top:18px!important;max-width:310px!important;font-family:var(--serif)!important;font-style:italic!important;font-size:16px!important;line-height:1.45!important;color:var(--warm)!important}
+.reader-section:first-of-type{padding-bottom:36px!important}
+.reader-section:first-of-type p{font-size:22px!important;line-height:1.62!important;margin:22px 0!important}
+.orig-btn{margin-top:22px!important;border-bottom:1px solid var(--earth)!important;font-family:var(--mono)!important;font-size:9px!important;text-transform:uppercase!important;letter-spacing:.16em!important;color:var(--earth)!important;padding-bottom:5px!important}
+.orig-text{display:none!important;margin-top:18px!important;font-family:var(--serif)!important;font-size:22px!important;line-height:1.45!important;color:var(--ink)!important}
+.orig-text.on{display:block!important}
+.authors .author-row{cursor:pointer!important}
 `;
 h = h.replace('</style>', css + '</style>');
 
-const app = String.raw`<script>
+const runtime = String.raw`
+<script>
 (function(){
-'use strict';
-var lastTouchEnd=0;document.addEventListener('touchend',function(e){var n=Date.now();if(n-lastTouchEnd<=300)e.preventDefault();lastTouchEnd=n},{passive:false});
-var $=function(id){return document.getElementById(id)};
-var domains=[['all','All','O'],['leadership','Leadership','△'],['communication','Communicate','( )'],['psychology','Psychology','◐'],['philosophy','Philosophy','✦']];
-var paths=[
-{id:'manage-up',d:'leadership',t:'Manage Your Manager',b:'Stop waiting to be led. Start shaping the conditions you work inside.',m:5,q:'Order and simplification are the first steps toward mastery.',author:'Thomas Mann',source:'Thomas Mann · The Magic Mountain · 1924',read:['Your manager needs fewer unknowns and clearer tradeoffs.','Send the tradeoff before the problem: here are the two paths, the cost of each, and my recommendation.']},
-{id:'lead-without-loud',d:'leadership',t:'Leading Without Loud',b:'Quiet authority is a skill, not a personality.',m:4,q:'The quieter you become, the more you are able to hear.',author:'Rumi',source:'Rumi · Masnavi · c. 1273',read:['Authority does not always announce itself.','Use silence as structure: ask one precise question, let the room answer, then summarize the pattern no one has named.']},
-{id:'decision-right-size',d:'leadership',t:'Right-Size the Decision',b:'Not every choice deserves the same amount of weight.',m:4,q:'The essence of strategy is choosing what not to do.',author:'Michael Porter',source:'Michael Porter · What Is Strategy? · 1996',read:['A leader protects attention by sizing decisions correctly.','Classify the decision before solving it: reversible, irreversible, high-signal, or noise. Spend effort in proportion to consequence.']},
-{id:'open-the-room',d:'communication',t:'Open the Room',b:'How the first thirty seconds of a meeting decide the rest of it.',m:4,q:'The beginning is the most important part of the work.',author:'Plato',source:'Plato · Republic · c. 375 BCE',read:['Most meetings begin with throat-clearing. Strong rooms begin with orientation.','Before your next meeting, write the first sentence in advance: purpose, stakes, and the decision needed.']},
-{id:'art-of-recap',d:'communication',t:'The Art of the Recap',b:'Most meetings end. Few meetings land. The recap decides which.',m:3,q:'If you wish to converse with me, define your terms.',author:'Voltaire',source:'Voltaire · Philosophical Dictionary · 1764',read:['A recap is not a transcript. It is compression.','After the meeting, send only three things: decision, owner, next date.']},
-{id:'say-the-frame',d:'communication',t:'Say the Frame',b:'Before persuading, name the shape of the conversation.',m:3,q:'If you wish to converse with me, define your terms.',author:'Voltaire',source:'Voltaire · Philosophical Dictionary · 1764',read:['A frame tells people how to listen.','When a conversation feels scattered, pause and name the frame: deciding, diagnosing, aligning, or generating options.']},
-{id:'defaults',d:'psychology',t:'Defaults Beat Intention',b:'The environment usually votes before you do.',m:3,q:'You do not rise to the level of your goals. You fall to the level of your systems.',author:'James Clear',source:'James Clear · Atomic Habits · 2018',read:['A goal without a default becomes self-criticism.','Make the desired behavior the nearest behavior. Put the cue where your hand already goes.']},
-{id:'reward-prediction',d:'psychology',t:'Reward Prediction Error',b:'Motivation spikes when reality beats expectation.',m:5,q:'The brain is a prediction machine.',author:'Andy Clark',source:'Andy Clark · Surfing Uncertainty · 2016',read:['Dopamine is less about pleasure than update.','Create a small positive surprise after the hard action. The brain returns to loops that feel slightly better than expected.']},
-{id:'attention-design',d:'psychology',t:'Design the Attention Field',b:'Your environment decides what becomes effortless.',m:4,q:'Attention is the beginning of devotion.',author:'Mary Oliver',source:'Mary Oliver · Upstream · 2016',read:['Attention is not only discipline. It is placement.','Remove one competing cue and place one deliberate cue in the center of the environment.']},
-{id:'wu-wei',d:'philosophy',t:'Wú Wéi',b:'Action that does not fight the grain of the world.',m:6,q:'Nature does not hurry, yet everything is accomplished.',author:'Laozi',source:'Laozi · 道德經 · c. 400 BCE',original:'道常無為而無不為。',read:['Wú wéi is action without unnecessary self-interference.','Do not push the whole system. Adjust the condition that makes the right action easier.']},
-{id:'amor-fati',d:'philosophy',t:'Amor Fati',b:'Use what happens as material, not interruption.',m:5,q:'My formula for greatness in a human being is amor fati.',author:'Friedrich Nietzsche',source:'Friedrich Nietzsche · Ecce Homo · 1888',original:'Meine Formel für die Größe am Menschen ist amor fati.',read:['This is not passive acceptance. It is conversion.','When a constraint appears, ask what form it wants to become. Treat it as material before treating it as damage.']},
-{id:'zhuangzi-usefulness',d:'philosophy',t:'The Use of Uselessness',b:'Some things survive because they refuse obvious utility.',m:5,q:'Everyone knows the use of the useful, but no one knows the use of the useless.',author:'Zhuangzi',source:'Zhuangzi · 莊子 · c. 300 BCE',original:'人皆知有用之用，而莫知無用之用也。',read:['Not all value announces itself as productivity.','Protect one useless interval today: no output, no optimization, no justification.']}
-];
-var todayIds=['manage-up','open-the-room','defaults','wu-wei'];
-var adj=['Quiet','Lunar','Amber','Violet','Clever','Nocturnal','Bronze','Hidden','Patient','Silver'];var nouns=['Octopus','Raven','Manta','Sphinx','Athena','Heraclitus','Nautilus','Fox','Ariadne','Diogenes'];var current=null,renderQueued=false;
-function localIso(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}function addDays(date,n){var d=new Date(date+'T00:00:00');d.setDate(d.getDate()+n);return localIso(d)}function defaultState(){return{name:'Jun',user:'jun_023',saved:['manage-up','open-the-room','wu-wei','defaults'],todayHearts:[],votes:{},filter:'all',savedOnly:false,tab:'today',history:{},lastOpen:localIso()}}function readState(){try{return JSON.parse(localStorage.sharper_beta||'null')||defaultState()}catch(e){return defaultState()}}var state=readState();
-function persist(){state.lastOpen=localIso();localStorage.sharper_beta=JSON.stringify(state);queueSelf()}function normalize(){state.saved=Array.isArray(state.saved)?state.saved:[];state.todayHearts=Array.isArray(state.todayHearts)?state.todayHearts:[];state.votes=state.votes||{};state.history=state.history||{};state.filter=state.filter||'all';state.tab=state.tab||'today';persist()}function todayRecord(){var t=localIso();state.history[t]=state.history[t]||{minutes:0,reads:0};return state.history[t]}function recordRead(min){var r=todayRecord();r.minutes+=min;r.reads+=1;persist()}function streak(){var c=0,d=localIso();while(state.history[d]&&state.history[d].minutes>0){c++;d=addDays(d,-1)}return c}function last21(){var arr=[];for(var i=20;i>=0;i--){var d=addDays(localIso(),-i);arr.push({date:d,minutes:state.history[d]?state.history[d].minutes||0:0})}return arr}function totalMinutes(){return Object.values(state.history).reduce(function(s,d){return s+(d.minutes||0)},0)}function path(id){return paths.find(function(p){return p.id===id})}function isSaved(id){return state.saved.indexOf(id)>-1}function domainName(id){var d=domains.find(function(x){return x[0]===id});return d?d[1]:id}function sourceText(p){return p.source||p.author}function escapeHtml(v){return String(v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}function queueSelf(){if(renderQueued)return;renderQueued=true;requestAnimationFrame(function(){renderQueued=false;renderSelf()})}function dayGreeting(){var h=new Date().getHours();return h<12?'Good morning':h<18?'Good afternoon':'Good evening'}
-function setupUtilityControls(){var old=$('savedToggle');if(old&&!document.querySelector('.filter-actions'))old.outerHTML='<div class="filter-actions"><button id="savedToggle" class="saved-toggle">Show saved</button><button id="clearFilter" class="saved-toggle">Clear</button></div><p class="library-note">An accumulation of daily specimens — saved, unsaved, sorted, and returned to.</p>';var search=$('search');if(search&&!search.dataset.bound){search.dataset.bound='1';search.addEventListener('input',function(){requestAnimationFrame(renderLibrary)})}}
-function renderToday(){var ids=todayIds.slice(0,4),total=ids.length+2,snap=$('snap');$('bars').innerHTML=Array.from({length:total},function(_,i){return '<span class="'+(i===0?'active':'')+'"></span>'}).join('');$('count').textContent='1/'+total;snap.innerHTML='<section class="today-page center"><div class="star">✦</div><div class="kicker ink">Daily specimens</div><h1>'+dayGreeting()+', '+escapeHtml(state.name.split(' ')[0])+'.</h1><p class="intro">Four small readings. Keep what sharpens the day.</p><div class="streak-line">Streak · Day '+streak()+'</div></section>'+ids.map(function(id){var p=path(id),heart=state.todayHearts.indexOf(id)>-1;return '<section class="today-page" onclick="openReader(\''+p.id+'\')"><div style="display:flex;justify-content:space-between"><div class="kicker">'+domainName(p.d)+' · daily wisdom</div><button onclick="event.stopPropagation();toggleTodayHeart(\''+p.id+'\',this)" style="color:var(--earth);font-size:24px">'+(heart?'♥':'♡')+'</button></div><div class="quote-mark">“</div><blockquote class="quote">'+escapeHtml(p.q)+'</blockquote><div class="author">'+escapeHtml(sourceText(p))+'</div><p class="blurb">'+escapeHtml(p.b)+'</p></section>'}).join('')+'<section class="today-page center"><div class="star">✦</div><h1>That is today.</h1><p class="intro">Come back tomorrow. The same hour, if you can. The mind keeps what you return to.</p><div class="streak-line">Library holds the expanded archive</div></section>';snap.onscroll=function(e){var idx=Math.round(e.target.scrollTop/e.target.clientHeight);idx=Math.max(0,Math.min(total-1,idx));$('count').textContent=(idx+1)+'/'+total;Array.prototype.slice.call($('bars').children).forEach(function(b,i){b.classList.toggle('active',i<=idx)})}}
-function renderLibrary(){setupUtilityControls();$('filters').innerHTML=domains.filter(function(d){return d[0]!=='all'}).map(function(d){return '<button class="'+(state.filter===d[0]?'on':'')+'" onclick="setFilter(\''+d[0]+'\')">'+d[1]+'</button>'}).join('');var st=$('savedToggle');if(st){st.textContent='Show saved';st.classList.toggle('on',state.savedOnly);st.onclick=function(){state.savedOnly=true;persist();renderLibrary()}}var clear=$('clearFilter');if(clear)clear.onclick=function(){state.savedOnly=false;state.filter='all';$('search').value='';persist();renderLibrary()};var q=($('search').value||'').toLowerCase();var arr=paths.filter(function(p){return(state.filter==='all'||p.d===state.filter)&&(!state.savedOnly||isSaved(p.id))&&(!q||[p.t,p.b,p.q,p.author,sourceText(p),domainName(p.d)].join(' ').toLowerCase().indexOf(q)>-1)});$('paths').innerHTML=arr.map(function(p){return '<article class="row"><button style="color:var(--earth)" onclick="toggleSave(\''+p.id+'\')">'+(isSaved(p.id)?'♥':domains.find(function(d){return d[0]===p.d})[2])+'</button><button onclick="openReader(\''+p.id+'\')" style="text-align:left"><div class="row-meta">'+p.m+' min · '+domainName(p.d)+'</div><div class="row-title">'+escapeHtml(p.t)+'</div><div class="row-blurb">'+escapeHtml(p.b)+'</div></button><button onclick="openReader(\''+p.id+'\')">→</button></article>'}).join('')}
-function renderSelf(){if(!$('nickname'))return;$('nickname').textContent=state.name;$('username').textContent='@'+state.user;$('avatarLetter').textContent=state.name[0].toUpperCase();$('streak').textContent=streak();$('minutes').textContent=totalMinutes();$('ideas').textContent=state.saved.length;$('days').innerHTML=last21().map(function(d,i){return i===20?'<span class="todaydot"><i class="dot '+(d.minutes?'done':'')+'"></i></span>':'<i class="dot '+(d.minutes?'done':'')+'"></i>'}).join('');var counts={};state.saved.forEach(function(id){var p=path(id);if(p){var a=sourceText(p).split(' · ')[0];counts[a]=(counts[a]||0)+1}});var rows=Object.entries(counts).sort(function(a,b){return b[1]-a[1]}).slice(0,5);$('authors').innerHTML=rows.map(function(r,i){return '<button class="author-row" onclick="openAuthorSaved(\''+encodeURIComponent(r[0])+'\')"><span class="idx">0'+(i+1)+'</span><span class="aname">'+escapeHtml(r[0])+'</span><span class="count">'+r[1]+' saved →</span></button>'}).join('')}
-function openReader(id){current=id;var p=path(id);$('rmeta').textContent=domainName(p.d)+' · '+p.m+' min';$('rheart').textContent=isSaved(id)?'♥':'♡';var original=p.original||'';$('readerBody').innerHTML='<div class="kicker">Specimen</div><h1>'+escapeHtml(p.t)+'</h1><p class="lead">'+escapeHtml(p.b)+'</p><div class="rq"><blockquote>"'+escapeHtml(p.q)+'"</blockquote><div class="author">'+escapeHtml(sourceText(p))+'</div>'+(original?'<button class="orig-btn" onclick="toggleOriginal()">Show original</button><div id="origText" class="orig-text">'+escapeHtml(original)+'</div>':'')+'</div><div class="reader-section"><div class="kicker ink">Dive deeper</div>'+p.read.map(function(x){return '<p>'+escapeHtml(x)+'</p>'}).join('')+'<div class="feedback"><button onclick="vote(\'useful\')" class="'+(state.votes[id]==='useful'?'on':'')+'">↑ More like this</button><button onclick="vote(\'less\')" class="'+(state.votes[id]==='less'?'on':'')+'">↓ Less like this</button></div></div>';$('reader').classList.add('on');recordRead(p.m)}
-function tab(name){state.tab=name;localStorage.sharper_beta=JSON.stringify(state);['today','library','self'].forEach(function(v){var view=$(v),nav=$('nav-'+v);if(view)view.classList.toggle('on',v===name);if(nav)nav.classList.toggle('on',v===name)});if(name==='today')renderToday();if(name==='library')renderLibrary();if(name==='self')renderSelf()}
-window.setFilter=function(v){state.filter=v;persist();renderLibrary()};window.renderToday=renderToday;window.renderLibrary=renderLibrary;window.renderSelf=renderSelf;window.openReader=openReader;window.tab=tab;window.closeReader=function(){$('reader').classList.remove('on')};window.toggleOriginal=function(){var el=$('origText');if(el)el.classList.toggle('on')};window.toggleSave=function(id){state.saved=isSaved(id)?state.saved.filter(function(x){return x!==id}):[id].concat(state.saved);persist();renderLibrary();if(current&&$('rheart'))$('rheart').textContent=isSaved(current)?'♥':'♡'};window.toggleTodayHeart=function(id,btn){if(state.todayHearts.indexOf(id)>-1)state.todayHearts=state.todayHearts.filter(function(x){return x!==id});else state.todayHearts.push(id);if(state.todayHearts.indexOf(id)>-1&&!isSaved(id))state.saved=[id].concat(state.saved);persist();if(btn)btn.textContent=state.todayHearts.indexOf(id)>-1?'♥':'♡'};window.vote=function(v){state.votes[current]=v;persist();openReader(current)};window.openAuthorSaved=function(encoded){var author=decodeURIComponent(encoded);state.savedOnly=true;state.filter='all';persist();tab('library');setTimeout(function(){var s=$('search');if(s)s.value=author;renderLibrary()},0)};window.openSettings=function(){var n=$('nameInput'),u=$('userInput'),a=$('sAvatar');if(n)n.value=state.name;if(u)u.value=state.user;if(a)a.textContent=state.name[0].toUpperCase();$('settings').classList.add('on')};window.closeSettings=function(){$('settings').classList.remove('on')};window.generateName=function(){var a=adj[Math.floor(Math.random()*adj.length)],n=nouns[Math.floor(Math.random()*nouns.length)],num=Math.floor(1000+Math.random()*8999);$('nameInput').value=a+' '+n;$('userInput').value=(a+'_'+n+'_'+num).toLowerCase()};window.saveIdentity=function(){var n=$('nameInput').value.trim()||'Jun',u=$('userInput').value.trim().replace(/[^a-zA-Z0-9_]/g,'_').toLowerCase()||'jun_023';state.name=n;state.user=u;persist();renderToday();closeSettings()};
-normalize();setupUtilityControls();tab(state.tab||'today');
+  var $ = function(id){ return document.getElementById(id); };
+  function setDomain(id,label){ var d = domains.find(function(x){return x[0]===id}); if(d) d[1]=label; }
+  setDomain('leadership','Leadership');
+  setDomain('communication','Communicate');
+
+  var extras = [
+    {id:'decision-right-size',d:'leadership',t:'Right-Size the Decision',b:'Not every choice deserves the same amount of weight.',m:4,q:'The essence of strategy is choosing what not to do.',author:'Michael Porter',read:['A leader protects attention by sizing decisions correctly.','Classify the decision before solving it: reversible, irreversible, high-signal, or noise. Spend effort in proportion to consequence.']},
+    {id:'say-the-frame',d:'communication',t:'Say the Frame',b:'Before persuading, name the shape of the conversation.',m:3,q:'If you wish to converse with me, define your terms.',author:'Voltaire',read:['A frame tells people how to listen.','When a conversation feels scattered, pause and name the frame: are we deciding, diagnosing, aligning, or generating options?']},
+    {id:'reward-prediction',d:'psychology',t:'Reward Prediction Error',b:'Motivation spikes when reality beats expectation.',m:5,q:'The brain is a prediction machine.',author:'Andy Clark',read:['Dopamine is less about pleasure than update.','Create a small positive surprise after the hard action. The brain returns to loops that feel slightly better than expected.']},
+    {id:'attention-design',d:'psychology',t:'Design the Attention Field',b:'Your environment decides what becomes effortless.',m:4,q:'Attention is the beginning of devotion.',author:'Mary Oliver',read:['Attention is not only discipline. It is placement.','Remove one competing cue and place one deliberate cue in the center of the environment.']},
+    {id:'amor-fati',d:'philosophy',t:'Amor Fati',b:'Use what happens as material, not interruption.',m:5,q:'My formula for greatness in a human being is amor fati.',author:'Friedrich Nietzsche · Ecce Homo',read:['This is not passive acceptance. It is conversion.','When a constraint appears, ask what form it wants to become. Treat it as material before treating it as damage.']},
+    {id:'zhuangzi-usefulness',d:'philosophy',t:'The Use of Uselessness',b:'Some things survive because they refuse obvious utility.',m:5,q:'Everyone knows the use of the useful, but no one knows the use of the useless.',author:'Zhuangzi · 莊子',read:['Not all value announces itself as productivity.','Protect one useless interval today: no output, no optimization, no justification.']}
+  ];
+  extras.forEach(function(p){ if(!paths.some(function(x){return x.id===p.id})) paths.push(p); });
+
+  var dailyWisdomIds = ['manage-up','open-the-room','defaults','wu-wei'];
+  todayIds.splice(0,todayIds.length,dailyWisdomIds[0],dailyWisdomIds[1],dailyWisdomIds[2],dailyWisdomIds[3]);
+
+  window.sourceText = function(p){
+    var map = {
+      'open-the-room':'Plato · Republic · c. 375 BCE',
+      'art-of-recap':'Voltaire · Philosophical Dictionary · 1764',
+      'say-the-frame':'Voltaire · Philosophical Dictionary · 1764',
+      'manage-up':'Thomas Mann · The Magic Mountain · 1924',
+      'lead-without-loud':'Rumi · Masnavi · c. 1273',
+      'decision-right-size':'Michael Porter · What Is Strategy? · 1996',
+      'defaults':'James Clear · Atomic Habits · 2018',
+      'reward-prediction':'Andy Clark · Surfing Uncertainty · 2016',
+      'attention-design':'Mary Oliver · Upstream · 2016',
+      'wu-wei':'Laozi · 道德經 · c. 400 BCE',
+      'amor-fati':'Friedrich Nietzsche · Ecce Homo · 1888',
+      'zhuangzi-usefulness':'Zhuangzi · 莊子 · c. 300 BCE'
+    };
+    return map[p.id] || p.author;
+  };
+
+  window.originalText = function(id){
+    return {
+      'wu-wei':'道常無為而無不為。',
+      'zhuangzi-usefulness':'人皆知有用之用，而莫知無用之用也。',
+      'amor-fati':'Meine Formel für die Größe am Menschen ist amor fati.'
+    }[id] || '';
+  };
+  window.toggleOriginal = function(){ var el=$('origText'); if(el) el.classList.toggle('on'); };
+  window.openAuthorSaved = function(author){ state.savedOnly=true; state.filter='all'; persist(); tab('library'); setTimeout(function(){ $('search').value=author; renderLibrary(); },0); };
+
+  var oldSaved = $('savedToggle');
+  if(oldSaved && !document.querySelector('.filter-actions')){
+    oldSaved.outerHTML = '<div class="filter-actions"><button id="savedToggle" class="saved-toggle">Show saved</button><button id="clearFilter" class="saved-toggle">Clear</button></div><p class="library-note">An accumulation of daily specimens — saved, unsaved, sorted, and returned to.</p>';
+  }
+
+  window.renderToday = function(){
+    var ids = dailyWisdomIds.slice(0,4);
+    var total = ids.length;
+    var hour = new Date().getHours();
+    var greet = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    $('bars').innerHTML = ids.map(function(_,i){ return '<span class="'+(i===0?'active':'')+'"></span>'; }).join('');
+    $('count').textContent = '1/' + total;
+    $('snap').innerHTML = ids.map(function(id,idx){
+      var p = path(id);
+      var heart = state.todayHearts.includes(id);
+      var greeting = idx===0 ? '<div class="kicker ink">'+greet+', '+state.name.split(' ')[0]+'</div>' : '';
+      return '<section class="today-page">'+greeting+'<div style="display:flex;justify-content:space-between;margin-top:'+(idx===0?'32px':'0')+'"><div class="kicker">'+domainName(p.d)+' · daily wisdom</div><button onclick="toggleTodayHeart(&quot;'+p.id+'&quot;)" style="color:var(--earth);font-size:24px">'+(heart?'♥':'♡')+'</button></div><div class="quote-mark">“</div><blockquote class="quote">'+p.q+'</blockquote><div class="author">'+sourceText(p)+'</div><p class="blurb">'+p.b+'</p></section>';
+    }).join('');
+    $('snap').onscroll = function(e){
+      var idx = Math.round(e.target.scrollTop / e.target.clientHeight);
+      if(idx < 0) idx = 0;
+      if(idx > total - 1) idx = total - 1;
+      $('count').textContent = (idx+1) + '/' + total;
+      Array.prototype.slice.call($('bars').children).forEach(function(b,i){ b.classList.toggle('active',i<=idx); });
+    };
+  };
+
+  window.renderLibrary = function(){
+    $('filters').innerHTML = domains.filter(function(d){return d[0]!=='all'}).map(function(d){ return '<button class="'+(state.filter===d[0]?'on':'')+'" onclick="state.filter=&quot;'+d[0]+'&quot;;persist();renderLibrary()">'+d[1]+'</button>'; }).join('');
+    var st=$('savedToggle'); if(st){ st.innerHTML='Show saved'; st.classList.toggle('on',state.savedOnly); st.onclick=function(){ state.savedOnly=true; persist(); renderLibrary(); }; }
+    var clear=$('clearFilter'); if(clear){ clear.onclick=function(){ state.savedOnly=false; state.filter='all'; $('search').value=''; persist(); renderLibrary(); }; }
+    var q=$('search').value.toLowerCase();
+    var arr=paths.filter(function(p){ return (state.filter==='all'||p.d===state.filter) && (!state.savedOnly||isSaved(p.id)) && (!q||[p.t,p.b,p.q,sourceText(p),p.author,domainName(p.d)].join(' ').toLowerCase().includes(q)); });
+    $('paths').innerHTML=arr.map(function(p){ return '<article class="row"><button style="color:var(--earth)" onclick="toggleSave(&quot;'+p.id+'&quot;)">'+(isSaved(p.id)?'♥':domains.find(function(d){return d[0]===p.d})[2])+'</button><button onclick="openReader(&quot;'+p.id+'&quot;)" style="text-align:left"><div class="row-meta">'+p.m+' min · '+domainName(p.d)+'</div><div class="row-title">'+p.t+'</div><div class="row-blurb">'+p.b+'</div></button><button onclick="openReader(&quot;'+p.id+'&quot;)">→</button></article>'; }).join('');
+  };
+
+  window.openReader = function(id){
+    current=id; var p=path(id); $('rmeta').textContent=domainName(p.d)+' · '+p.m+' min'; $('rheart').textContent=isSaved(id)?'♥':'♡';
+    var original=originalText(id);
+    $('readerBody').innerHTML='<div class="kicker">Specimen</div><h1>'+p.t+'</h1><p class="lead">'+p.b+'</p><div class="rq"><blockquote>"'+p.q+'"</blockquote><div class="author">'+sourceText(p)+'</div>'+(original?'<button class="orig-btn" onclick="toggleOriginal()">Show original</button><div id="origText" class="orig-text">'+original+'</div>':'')+'</div><div class="reader-section"><div class="kicker ink">Dive deeper</div>'+p.read.map(function(x){return '<p>'+x+'</p>';}).join('')+'<div class="feedback"><button onclick="vote(&quot;useful&quot;)" class="'+(state.votes[id]==='useful'?'on':'')+'">↑ More like this</button><button onclick="vote(&quot;less&quot;)" class="'+(state.votes[id]==='less'?'on':'')+'">↓ Less like this</button></div></div>';
+    $('reader').classList.add('on'); recordRead(p.m); renderToday();
+  };
+
+  window.renderSelf = function(){
+    $('nickname').textContent=state.name; $('username').textContent='@'+state.user; $('avatarLetter').textContent=state.name[0].toUpperCase(); $('streak').textContent=streak(); $('minutes').textContent=totalMinutes(); $('ideas').textContent=state.saved.length;
+    $('days').innerHTML=last21().map(function(d,i){ return i===20?'<span class="todaydot"><i class="dot '+(d.minutes?'done':'')+'"></i></span>':'<i class="dot '+(d.minutes?'done':'')+'"></i>'; }).join('');
+    var counts={}; state.saved.forEach(function(id){ var p=path(id); if(p){ var a=sourceText(p).split(' · ')[0]; counts[a]=(counts[a]||0)+1; } });
+    var rows=Object.entries(counts).sort(function(a,b){return b[1]-a[1]}).slice(0,5);
+    $('authors').innerHTML=rows.map(function(r,i){ return '<button class="author-row" onclick="openAuthorSaved(&quot;'+r[0].replace(/"/g,'&quot;')+'&quot;)"><span class="idx">0'+(i+1)+'</span><span class="aname">'+r[0]+'</span><span class="count">'+r[1]+' saved →</span></button>'; }).join('');
+  };
+
+  renderToday(); renderLibrary(); renderSelf();
 })();
-</script>`;
-h = h.replace(/<script>let lastTouchEnd[\s\S]*?<\/script>\s*<\/body>/, app + '</body>');
-if (!h.includes('Daily specimens')) h = h.replace('</body>', app + '</body>');
+</script>
+`;
+h = h.replace('</body>', runtime + '</body>');
 
 fs.writeFileSync('dist/index.html', h);
