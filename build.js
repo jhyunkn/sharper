@@ -44,7 +44,8 @@ const runtime = String.raw`
   ];
   extras.forEach(function(p){ if(!paths.some(function(x){return x.id===p.id})) paths.push(p); });
 
-  todayIds.splice(0,todayIds.length,'manage-up','open-the-room','defaults','wu-wei');
+  var dailyWisdomIds = ['manage-up','open-the-room','defaults','wu-wei'];
+  todayIds.splice(0,todayIds.length,dailyWisdomIds[0],dailyWisdomIds[1],dailyWisdomIds[2],dailyWisdomIds[3]);
 
   window.sourceText = function(p){
     var map = {
@@ -74,43 +75,46 @@ const runtime = String.raw`
   window.toggleOriginal = function(){ var el=$('origText'); if(el) el.classList.toggle('on'); };
   window.openAuthorSaved = function(author){ state.savedOnly=true; state.filter='all'; persist(); tab('library'); setTimeout(function(){ $('search').value=author; renderLibrary(); },0); };
 
-  var savedToggle = $('savedToggle');
-  if(savedToggle && !document.querySelector('.filter-actions')){
-    savedToggle.outerHTML = '<div class="filter-actions"><button id="savedToggle" class="saved-toggle">Show saved</button><button id="clearFilter" class="saved-toggle">Clear</button></div><p class="library-note">An accumulation of daily specimens — saved, unsaved, sorted, and returned to.</p>';
+  var oldSaved = $('savedToggle');
+  if(oldSaved && !document.querySelector('.filter-actions')){
+    oldSaved.outerHTML = '<div class="filter-actions"><button id="savedToggle" class="saved-toggle">Show saved</button><button id="clearFilter" class="saved-toggle">Clear</button></div><p class="library-note">An accumulation of daily specimens — saved, unsaved, sorted, and returned to.</p>';
   }
 
   window.renderToday = function(){
-    var total = 4;
+    var ids = dailyWisdomIds.slice(0,4);
+    var total = ids.length;
     var hour = new Date().getHours();
     var greet = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-    $('bars').innerHTML = Array.from({length:total},function(_,i){ return '<span class="'+(i===0?'active':'')+'"></span>'; }).join('');
-    $('count').textContent = '1/4';
-    $('snap').innerHTML = todayIds.map(function(id,idx){
+    $('bars').innerHTML = ids.map(function(_,i){ return '<span class="'+(i===0?'active':'')+'"></span>'; }).join('');
+    $('count').textContent = '1/' + total;
+    $('snap').innerHTML = ids.map(function(id,idx){
       var p = path(id);
       var heart = state.todayHearts.includes(id);
       var greeting = idx===0 ? '<div class="kicker ink">'+greet+', '+state.name.split(' ')[0]+'</div>' : '';
-      return '<section class="today-page">'+greeting+'<div style="display:flex;justify-content:space-between;margin-top:'+(idx===0?'32px':'0')+'"><div class="kicker">'+domainName(p.d)+' · daily wisdom</div><button onclick="toggleTodayHeart(\''+p.id+'\')" style="color:var(--earth);font-size:24px">'+(heart?'♥':'♡')+'</button></div><div class="quote-mark">“</div><blockquote class="quote">'+p.q+'</blockquote><div class="author">'+sourceText(p)+'</div><p class="blurb">'+p.b+'</p></section>';
+      return '<section class="today-page">'+greeting+'<div style="display:flex;justify-content:space-between;margin-top:'+(idx===0?'32px':'0')+'"><div class="kicker">'+domainName(p.d)+' · daily wisdom</div><button onclick="toggleTodayHeart(&quot;'+p.id+'&quot;)" style="color:var(--earth);font-size:24px">'+(heart?'♥':'♡')+'</button></div><div class="quote-mark">“</div><blockquote class="quote">'+p.q+'</blockquote><div class="author">'+sourceText(p)+'</div><p class="blurb">'+p.b+'</p></section>';
     }).join('');
     $('snap').onscroll = function(e){
       var idx = Math.round(e.target.scrollTop / e.target.clientHeight);
-      $('count').textContent = (idx+1) + '/4';
+      if(idx < 0) idx = 0;
+      if(idx > total - 1) idx = total - 1;
+      $('count').textContent = (idx+1) + '/' + total;
       Array.prototype.slice.call($('bars').children).forEach(function(b,i){ b.classList.toggle('active',i<=idx); });
     };
   };
 
   window.renderLibrary = function(){
-    $('filters').innerHTML = domains.filter(function(d){return d[0]!=='all'}).map(function(d){ return '<button class="'+(state.filter===d[0]?'on':'')+'" onclick="state.filter=\''+d[0]+'\';persist();renderLibrary()">'+d[1]+'</button>'; }).join('');
+    $('filters').innerHTML = domains.filter(function(d){return d[0]!=='all'}).map(function(d){ return '<button class="'+(state.filter===d[0]?'on':'')+'" onclick="state.filter=&quot;'+d[0]+'&quot;;persist();renderLibrary()">'+d[1]+'</button>'; }).join('');
     var st=$('savedToggle'); if(st){ st.innerHTML='Show saved'; st.classList.toggle('on',state.savedOnly); st.onclick=function(){ state.savedOnly=true; persist(); renderLibrary(); }; }
     var clear=$('clearFilter'); if(clear){ clear.onclick=function(){ state.savedOnly=false; state.filter='all'; $('search').value=''; persist(); renderLibrary(); }; }
     var q=$('search').value.toLowerCase();
     var arr=paths.filter(function(p){ return (state.filter==='all'||p.d===state.filter) && (!state.savedOnly||isSaved(p.id)) && (!q||[p.t,p.b,p.q,sourceText(p),p.author,domainName(p.d)].join(' ').toLowerCase().includes(q)); });
-    $('paths').innerHTML=arr.map(function(p){ return '<article class="row"><button style="color:var(--earth)" onclick="toggleSave(\''+p.id+'\')">'+(isSaved(p.id)?'♥':domains.find(function(d){return d[0]===p.d})[2])+'</button><button onclick="openReader(\''+p.id+'\')" style="text-align:left"><div class="row-meta">'+p.m+' min · '+domainName(p.d)+'</div><div class="row-title">'+p.t+'</div><div class="row-blurb">'+p.b+'</div></button><button onclick="openReader(\''+p.id+'\')">→</button></article>'; }).join('');
+    $('paths').innerHTML=arr.map(function(p){ return '<article class="row"><button style="color:var(--earth)" onclick="toggleSave(&quot;'+p.id+'&quot;)">'+(isSaved(p.id)?'♥':domains.find(function(d){return d[0]===p.d})[2])+'</button><button onclick="openReader(&quot;'+p.id+'&quot;)" style="text-align:left"><div class="row-meta">'+p.m+' min · '+domainName(p.d)+'</div><div class="row-title">'+p.t+'</div><div class="row-blurb">'+p.b+'</div></button><button onclick="openReader(&quot;'+p.id+'&quot;)">→</button></article>'; }).join('');
   };
 
   window.openReader = function(id){
     current=id; var p=path(id); $('rmeta').textContent=domainName(p.d)+' · '+p.m+' min'; $('rheart').textContent=isSaved(id)?'♥':'♡';
     var original=originalText(id);
-    $('readerBody').innerHTML='<div class="kicker">Specimen</div><h1>'+p.t+'</h1><p class="lead">'+p.b+'</p><div class="rq"><blockquote>"'+p.q+'"</blockquote><div class="author">'+sourceText(p)+'</div>'+(original?'<button class="orig-btn" onclick="toggleOriginal()">Show original</button><div id="origText" class="orig-text">'+original+'</div>':'')+'</div><div class="reader-section"><div class="kicker ink">Dive deeper</div>'+p.read.map(function(x){return '<p>'+x+'</p>';}).join('')+'<div class="feedback"><button onclick="vote(\'useful\')" class="'+(state.votes[id]==='useful'?'on':'')+'">↑ More like this</button><button onclick="vote(\'less\')" class="'+(state.votes[id]==='less'?'on':'')+'">↓ Less like this</button></div></div>';
+    $('readerBody').innerHTML='<div class="kicker">Specimen</div><h1>'+p.t+'</h1><p class="lead">'+p.b+'</p><div class="rq"><blockquote>"'+p.q+'"</blockquote><div class="author">'+sourceText(p)+'</div>'+(original?'<button class="orig-btn" onclick="toggleOriginal()">Show original</button><div id="origText" class="orig-text">'+original+'</div>':'')+'</div><div class="reader-section"><div class="kicker ink">Dive deeper</div>'+p.read.map(function(x){return '<p>'+x+'</p>';}).join('')+'<div class="feedback"><button onclick="vote(&quot;useful&quot;)" class="'+(state.votes[id]==='useful'?'on':'')+'">↑ More like this</button><button onclick="vote(&quot;less&quot;)" class="'+(state.votes[id]==='less'?'on':'')+'">↓ Less like this</button></div></div>';
     $('reader').classList.add('on'); recordRead(p.m); renderToday();
   };
 
@@ -119,7 +123,7 @@ const runtime = String.raw`
     $('days').innerHTML=last21().map(function(d,i){ return i===20?'<span class="todaydot"><i class="dot '+(d.minutes?'done':'')+'"></i></span>':'<i class="dot '+(d.minutes?'done':'')+'"></i>'; }).join('');
     var counts={}; state.saved.forEach(function(id){ var p=path(id); if(p){ var a=sourceText(p).split(' · ')[0]; counts[a]=(counts[a]||0)+1; } });
     var rows=Object.entries(counts).sort(function(a,b){return b[1]-a[1]}).slice(0,5);
-    $('authors').innerHTML=rows.map(function(r,i){ return '<button class="author-row" onclick="openAuthorSaved(\''+r[0].replace(/'/g,'&#39;')+'\')"><span class="idx">0'+(i+1)+'</span><span class="aname">'+r[0]+'</span><span class="count">'+r[1]+' saved →</span></button>'; }).join('');
+    $('authors').innerHTML=rows.map(function(r,i){ return '<button class="author-row" onclick="openAuthorSaved(&quot;'+r[0].replace(/"/g,'&quot;')+'&quot;)"><span class="idx">0'+(i+1)+'</span><span class="aname">'+r[0]+'</span><span class="count">'+r[1]+' saved →</span></button>'; }).join('');
   };
 
   renderToday(); renderLibrary(); renderSelf();
