@@ -3,95 +3,129 @@ const fs = require('fs');
 fs.mkdirSync('dist', { recursive: true });
 let h = fs.readFileSync('index.html', 'utf8');
 
-// Self tab refinements.
-h = h.replace(/\.authors \.author-row\{[^}]*\}/, ".authors .author-row{display:grid;grid-template-columns:32px minmax(0,1fr) 100px;gap:18px;align-items:center;border-bottom:1px solid var(--ruleSoft);padding:20px 0;text-align:left}");
-h = h.replace(/\.aname\{[^}]*\}/, ".aname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px;font-family:var(--serif);font-style:italic;font-size:22px}");
-h = h.replace(/\.count\{[^}]*\}/, ".count{justify-self:end;border:1px solid var(--ruleSoft);border-radius:999px;padding:7px 10px;white-space:nowrap;text-align:right;font-family:var(--mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--warm)}");
-h = h.replace(/\.settings\{[^}]*\}/, ".settings{width:40px;height:40px;border:1px solid var(--ruleSoft);border-radius:50%;background:rgba(247,243,235,.35);font-family:var(--serif);font-size:28px;font-style:normal;line-height:1;color:rgba(26,23,20,.75);transition:transform .18s ease}");
-h = h.replace('onclick=\"openSettings()\">⚙</button>', 'onclick=\"openSettings()\">+</button>');
-h = h.replace(/<button class=\"close\" onclick=\"closeSettings\(\)\">×<\/button>/, '<button class=\"close\" onclick=\"closeSettings()\">+</button>');
-h = h.replace(/\.close\{[^}]*\}/, ".close{width:40px;height:40px;border-radius:50%;border:1px solid var(--rule);font-size:28px;line-height:1;transform:rotate(45deg)}");
-h = h.replace(/\.sheet h2\{[^}]*\}/, ".sheet h2{font-family:var(--sans);font-weight:500;font-style:normal;font-size:30px;letter-spacing:-.035em;margin:8px 0 0}");
-h = h.replace(/\.sheet\.on\{display:block\}/, ".sheet.on{display:block}.sheet .section{margin-top:30px;padding-top:24px}");
-h = h.replace(/\.field\{[^}]*\}/, ".field{display:block;border-bottom:1px solid var(--ruleSoft);padding-bottom:10px;margin-top:16px}");
-h = h.replace(/\.btns\{[^}]*\}/, ".btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}");
-h = h.replace(/\.pill\{[^}]*\}/, ".pill{border:1px solid var(--rule);border-radius:999px;padding:12px 14px;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.16em}");
-h = h.replace('Default avatar uses the first letter of your nickname. Photo upload is disabled in beta to keep the account system simple.', 'Avatar uses your nickname initial. Photo upload is disabled in beta.');
-h = h.replace('Sharper is currently in beta. This version records a real local streak and minute count on this device. The full version is coming soon with cloud sync, account history, permanent archive, and paid subscription options.', 'Sharper is in beta. This preview records local streak and minutes on this device. Full version coming soon with cloud sync, account history, archive, and subscription options.');
+const css = String.raw`
+.top-progress{position:sticky!important;top:40px!important;z-index:20!important;margin:0 28px!important;border:1px solid var(--ruleSoft)!important;border-radius:999px!important;background:rgba(239,234,224,.86)!important;backdrop-filter:blur(14px)!important;padding:12px 20px!important}
+.snap{height:100%!important;overflow-y:auto!important;scroll-snap-type:y proximity!important;-webkit-overflow-scrolling:touch!important;scroll-behavior:smooth!important;overscroll-behavior-y:contain!important}
+.lib-head{display:none!important}
+.library{padding-top:calc(32px + env(safe-area-inset-top))!important}
+.library .search{margin-top:0!important}
+.library .search input{width:100%!important;border:0!important;outline:0!important;background:transparent!important;font-family:var(--mono)!important;font-size:10px!important;letter-spacing:.14em!important;text-transform:uppercase!important;color:var(--warm)!important}
+.library .filters{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:18px!important;margin-top:22px!important;border-top:1px solid var(--ruleSoft)!important;border-bottom:1px solid var(--ruleSoft)!important;padding:12px 0 8px!important;overflow:visible!important;text-align:left!important;flex-wrap:nowrap!important}
+.library .filters button{width:auto!important;flex:0 0 auto!important;font-family:var(--mono)!important;font-size:10px!important;letter-spacing:.14em!important;text-transform:uppercase!important;text-align:left!important;white-space:nowrap!important;color:rgba(26,23,20,.58)!important;padding:0 0 5px!important;border-bottom:1px solid transparent!important}
+.library .filters button.on{color:var(--earth)!important;border-bottom-color:var(--earth)!important}
+.filter-actions{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:24px!important;margin-top:8px!important;text-align:left!important}
+.saved-toggle{display:inline-flex!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;margin:0!important;padding:0 0 5px!important;font-family:var(--mono)!important;font-size:10px!important;letter-spacing:.14em!important;text-transform:uppercase!important;color:rgba(26,23,20,.58)!important;border-bottom:1px solid transparent!important;text-align:left!important}
+.filter-actions .saved-toggle.on{color:var(--earth)!important;border-bottom-color:var(--earth)!important}
+.library-note{margin-top:18px!important;max-width:310px!important;font-family:var(--serif)!important;font-style:italic!important;font-size:16px!important;line-height:1.45!important;color:var(--warm)!important}
+.reader-section:first-of-type{padding-bottom:36px!important}
+.reader-section:first-of-type p{font-size:22px!important;line-height:1.62!important;margin:22px 0!important}
+.orig-btn{margin-top:22px!important;border-bottom:1px solid var(--earth)!important;font-family:var(--mono)!important;font-size:9px!important;text-transform:uppercase!important;letter-spacing:.16em!important;color:var(--earth)!important;padding-bottom:5px!important}
+.orig-text{display:none!important;margin-top:18px!important;font-family:var(--serif)!important;font-size:22px!important;line-height:1.45!important;color:var(--ink)!important}
+.orig-text.on{display:block!important}
+.authors .author-row{cursor:pointer!important}
+`;
+h = h.replace('</style>', css + '</style>');
 
-// Top alignment and language.
-h = h.replace(/\.top-progress\{[^}]*\}/, ".top-progress{position:sticky;top:40px;z-index:20;margin:0 28px;border:1px solid var(--ruleSoft);border-radius:999px;background:rgba(239,234,224,.86);backdrop-filter:blur(14px);padding:12px 20px}");
-h = h.replace(/\.lib-head\{[^}]*\}/, ".lib-head{display:none}");
-h = h.replace('Today’s voices', 'Daily specimens');
-h = h.replace('<div class=\"lib-head\"><span>✶</span><div class=\"kicker ink\">Four domains, one mind</div>', '<div class=\"lib-head\"><span>✶</span><div class=\"kicker ink\">4 domains, 1 mind</div>');
-h = h.replace('<div class=\"lib-head\"><span class=\"brand\"><i>✦</i>Sharper</span><div class=\"rule\"></div><div class=\"counter\">4 domains, 1 mind</div>', '<div class=\"lib-head\"><span>✶</span><div class=\"kicker ink\">4 domains, 1 mind</div>');
-
-// Library tab refinements.
-h = h.replace(/\.search input\{[^}]*\}/, ".search input{width:100%;border:0;outline:0;background:transparent;font-family:var(--mono);font-size:10px!important;letter-spacing:.14em;text-transform:uppercase;color:var(--warm)}");
-h = h.replace(/\.filters\{[^}]*\}/, ".filters{display:flex;align-items:center;justify-content:flex-start;gap:18px;margin-top:22px;border-top:1px solid var(--ruleSoft);border-bottom:1px solid var(--ruleSoft);padding:12px 0 8px;overflow:visible;text-align:left}");
-h = h.replace(/\.filters button,\.saved-toggle\{[^}]*\}/, ".filters button,.saved-toggle{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--warm)}.filters button{width:auto;flex:0 0 auto;font-size:10px;letter-spacing:.14em;text-align:left;white-space:nowrap;color:rgba(26,23,20,.58);padding:0 0 5px;border-bottom:1px solid transparent}");
-h = h.replace(/\.saved-toggle\{[^}]*\}/, ".saved-toggle{display:inline-flex;align-items:center;justify-content:flex-start;gap:8px;margin:0;padding:0 0 5px;font-size:10px!important;letter-spacing:.14em!important;color:rgba(26,23,20,.58)!important;border-bottom:1px solid transparent;text-align:left}");
-h = h.replace('</style>', ".library-note{margin-top:18px;max-width:310px;font-family:var(--serif);font-style:italic;font-size:16px;line-height:1.45;color:var(--warm)}.filter-actions{display:flex;align-items:center;justify-content:flex-start;gap:24px;margin-top:8px;text-align:left}.filter-actions .saved-toggle.on{color:var(--earth)!important;border-bottom-color:var(--earth)}.library{padding-top:calc(32px + env(safe-area-inset-top))}.library .search{margin-top:0}.library .filters button,.library .saved-toggle{font-family:var(--mono)!important;font-size:10px!important;letter-spacing:.14em!important;text-transform:uppercase!important;line-height:1.2!important}.library .filters button.on{color:var(--earth)!important;border-bottom-color:var(--earth)}.reader-section:first-of-type{padding-bottom:36px}.reader-section:first-of-type p{font-size:22px;line-height:1.62;margin:22px 0}.reader-section:first-of-type p:last-child{margin-bottom:0}.orig-btn{margin-top:22px;border-bottom:1px solid var(--earth);font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.16em;color:var(--earth);padding-bottom:5px}.orig-text{display:none;margin-top:18px;font-family:var(--serif);font-size:22px;line-height:1.45;color:var(--ink)}.orig-text.on{display:block}.snap{scroll-snap-type:y proximity!important;overscroll-behavior-y:contain!important;scroll-behavior:smooth}.authors .author-row{cursor:pointer}</style>");
-h = h.replace("['leadership','Leadership','△']", "['leadership','Leadership','△']");
-h = h.replace("['communication','Communication','( )']", "['communication','Communicate','( )']");
-h = h.replace("['leadership','Lead','△']", "['leadership','Leadership','△']");
-h = h.replace("['communication','Speak','( )']", "['communication','Communicate','( )']");
-h = h.replace("<button id=\"savedToggle\" class=\"saved-toggle\">♡ Show saved</button><div id=\"paths\"", "<div class=\"filter-actions\"><button id=\"savedToggle\" class=\"saved-toggle\">Show saved</button><button id=\"clearFilter\" class=\"saved-toggle\">Clear</button></div><p class=\"library-note\">An accumulation of daily specimens — saved, unsaved, sorted, and returned to.</p><div id=\"paths\"");
-h = h.replace(/\$\{p\.m\} min · 3 actions/g, "${p.m} min · ${domainName(p.d)}");
-h = h.replace("$('savedToggle').onclick=()=>{state.savedOnly=!state.savedOnly;persist();renderLibrary()};", "$('savedToggle').onclick=()=>{state.savedOnly=true;persist();renderLibrary()};$('clearFilter').onclick=()=>{state.savedOnly=false;state.filter='all';$('search').value='';persist();renderLibrary()};");
-h = h.replace("$('savedToggle').innerHTML=state.savedOnly?'♥ Saved only':'♡ Show saved';", "$('savedToggle').innerHTML='Show saved';$('savedToggle').classList.toggle('on',state.savedOnly);");
-h = h.replace("domains.map(d=>`<button", "domains.filter(d=>d[0]!=='all').map(d=>`<button");
-
-// Reader tab: remove Reflection and give Dive deeper more room.
-h = h.replace(/<div class='reader-section'><div class='kicker ink'>Reflection<\/div>[\s\S]*?<\/div><\/div>`;\$\('reader'\)\.classList\.add\('on'\);/, "`;$('reader').classList.add('on');");
-h = h.replace(/<div class='reader-section'><div class='kicker ink'>Dive deeper<\/div>\$\{p\.read\.map\(x=>'<p>'\+x\+'<\/p>'\)\.join\(''\)\}<\/div>/, "<div class='reader-section'><div class='kicker ink'>Dive deeper</div>${p.read.map(x=>'<p>'+x+'</p>').join('')}</div>");
-
-// Library content: total 3 specimens per domain. Today uses one summarized card per domain.
-const extraPaths = ",{id:'decision-right-size',d:'leadership',t:'Right-Size the Decision',b:'Not every choice deserves the same amount of weight.',m:4,q:'The essence of strategy is choosing what not to do.',author:'Michael Porter',read:['A leader protects attention by sizing decisions correctly.','Classify the decision before solving it: reversible, irreversible, high-signal, or noise. Spend effort in proportion to consequence.']},{id:'say-the-frame',d:'communication',t:'Say the Frame',b:'Before persuading, name the shape of the conversation.',m:3,q:'If you wish to converse with me, define your terms.',author:'Voltaire',read:['A frame tells people how to listen.','When a conversation feels scattered, pause and name the frame: are we deciding, diagnosing, aligning, or generating options?']},{id:'reward-prediction',d:'psychology',t:'Reward Prediction Error',b:'Motivation spikes when reality beats expectation.',m:5,q:'The brain is a prediction machine.',author:'Andy Clark',read:['Dopamine is less about pleasure than update.','Create a small positive surprise after the hard action. The brain returns to loops that feel slightly better than expected.']},{id:'attention-design',d:'psychology',t:'Design the Attention Field',b:'Your environment decides what becomes effortless.',m:4,q:'Attention is the beginning of devotion.',author:'Mary Oliver',read:['Attention is not only discipline. It is placement.','Remove one competing cue and place one deliberate cue in the center of the environment.']},{id:'amor-fati',d:'philosophy',t:'Amor Fati',b:'Use what happens as material, not interruption.',m:5,q:'My formula for greatness in a human being is amor fati.',author:'Friedrich Nietzsche · Ecce Homo',read:['This is not passive acceptance. It is conversion.','When a constraint appears, ask what form it wants to become. Treat it as material before treating it as damage.']},{id:'zhuangzi-usefulness',d:'philosophy',t:'The Use of Uselessness',b:'Some things survive because they refuse obvious utility.',m:5,q:'Everyone knows the use of the useful, but no one knows the use of the useless.',author:'Zhuangzi · 莊子',read:['Not all value announces itself as productivity.','Protect one useless interval today: no output, no optimization, no justification.']}";
-h = h.replace(/\];const todayIds=\['open-the-room','manage-up','defaults','wu-wei'\]/, extraPaths + "];const todayIds=['open-the-room','manage-up','defaults','wu-wei']");
-h = h.replace(/const todayIds=\['open-the-room','art-of-recap','say-the-frame','manage-up','lead-without-loud','decision-right-size','defaults','reward-prediction','attention-design','wu-wei','amor-fati','zhuangzi-usefulness'\]/, "const todayIds=['open-the-room','manage-up','defaults','wu-wei']");
-
-// Robust runtime override for Today summary, source years, originals, author-saved navigation.
-h = h.replace('</body>', `<script>
+const runtime = String.raw`
+<script>
 (function(){
-  const $ = id => document.getElementById(id);
-  const domain = (id,label) => { const d = domains.find(x=>x[0]===id); if(d) d[1]=label; };
-  domain('leadership','Leadership'); domain('communication','Communicate');
-  todayIds.splice(0,todayIds.length,'open-the-room','manage-up','defaults','wu-wei');
+  var $ = function(id){ return document.getElementById(id); };
+  function setDomain(id,label){ var d = domains.find(function(x){return x[0]===id}); if(d) d[1]=label; }
+  setDomain('leadership','Leadership');
+  setDomain('communication','Communicate');
+
+  var extras = [
+    {id:'decision-right-size',d:'leadership',t:'Right-Size the Decision',b:'Not every choice deserves the same amount of weight.',m:4,q:'The essence of strategy is choosing what not to do.',author:'Michael Porter',read:['A leader protects attention by sizing decisions correctly.','Classify the decision before solving it: reversible, irreversible, high-signal, or noise. Spend effort in proportion to consequence.']},
+    {id:'say-the-frame',d:'communication',t:'Say the Frame',b:'Before persuading, name the shape of the conversation.',m:3,q:'If you wish to converse with me, define your terms.',author:'Voltaire',read:['A frame tells people how to listen.','When a conversation feels scattered, pause and name the frame: are we deciding, diagnosing, aligning, or generating options?']},
+    {id:'reward-prediction',d:'psychology',t:'Reward Prediction Error',b:'Motivation spikes when reality beats expectation.',m:5,q:'The brain is a prediction machine.',author:'Andy Clark',read:['Dopamine is less about pleasure than update.','Create a small positive surprise after the hard action. The brain returns to loops that feel slightly better than expected.']},
+    {id:'attention-design',d:'psychology',t:'Design the Attention Field',b:'Your environment decides what becomes effortless.',m:4,q:'Attention is the beginning of devotion.',author:'Mary Oliver',read:['Attention is not only discipline. It is placement.','Remove one competing cue and place one deliberate cue in the center of the environment.']},
+    {id:'amor-fati',d:'philosophy',t:'Amor Fati',b:'Use what happens as material, not interruption.',m:5,q:'My formula for greatness in a human being is amor fati.',author:'Friedrich Nietzsche · Ecce Homo',read:['This is not passive acceptance. It is conversion.','When a constraint appears, ask what form it wants to become. Treat it as material before treating it as damage.']},
+    {id:'zhuangzi-usefulness',d:'philosophy',t:'The Use of Uselessness',b:'Some things survive because they refuse obvious utility.',m:5,q:'Everyone knows the use of the useful, but no one knows the use of the useless.',author:'Zhuangzi · 莊子',read:['Not all value announces itself as productivity.','Protect one useless interval today: no output, no optimization, no justification.']}
+  ];
+  extras.forEach(function(p){ if(!paths.some(function(x){return x.id===p.id})) paths.push(p); });
+
+  todayIds.splice(0,todayIds.length,'manage-up','open-the-room','defaults','wu-wei');
+
   window.sourceText = function(p){
-    const map = {'open-the-room':'Plato · Republic · c. 375 BCE','art-of-recap':'Voltaire · Philosophical Dictionary · 1764','say-the-frame':'Voltaire · Philosophical Dictionary · 1764','manage-up':'Thomas Mann · The Magic Mountain · 1924','lead-without-loud':'Rumi · Masnavi · c. 1273','decision-right-size':'Michael Porter · What Is Strategy? · 1996','defaults':'James Clear · Atomic Habits · 2018','reward-prediction':'Andy Clark · Surfing Uncertainty · 2016','attention-design':'Mary Oliver · Upstream · 2016','wu-wei':'Laozi · 道德經 · c. 400 BCE','amor-fati':'Friedrich Nietzsche · Ecce Homo · 1888','zhuangzi-usefulness':'Zhuangzi · 莊子 · c. 300 BCE'};
+    var map = {
+      'open-the-room':'Plato · Republic · c. 375 BCE',
+      'art-of-recap':'Voltaire · Philosophical Dictionary · 1764',
+      'say-the-frame':'Voltaire · Philosophical Dictionary · 1764',
+      'manage-up':'Thomas Mann · The Magic Mountain · 1924',
+      'lead-without-loud':'Rumi · Masnavi · c. 1273',
+      'decision-right-size':'Michael Porter · What Is Strategy? · 1996',
+      'defaults':'James Clear · Atomic Habits · 2018',
+      'reward-prediction':'Andy Clark · Surfing Uncertainty · 2016',
+      'attention-design':'Mary Oliver · Upstream · 2016',
+      'wu-wei':'Laozi · 道德經 · c. 400 BCE',
+      'amor-fati':'Friedrich Nietzsche · Ecce Homo · 1888',
+      'zhuangzi-usefulness':'Zhuangzi · 莊子 · c. 300 BCE'
+    };
     return map[p.id] || p.author;
   };
-  window.originalText = function(id){ return {'wu-wei':'道常無為而無不為。','zhuangzi-usefulness':'人皆知有用之用，而莫知無用之用也。','amor-fati':'Meine Formel für die Größe am Menschen ist amor fati.'}[id] || ''; };
-  window.toggleOriginal = function(){ const el=$('origText'); if(el) el.classList.toggle('on'); };
-  window.openAuthorSaved = function(author){ state.savedOnly=true; state.filter='all'; persist(); tab('library'); setTimeout(()=>{ $('search').value=author; renderLibrary(); },0); };
+
+  window.originalText = function(id){
+    return {
+      'wu-wei':'道常無為而無不為。',
+      'zhuangzi-usefulness':'人皆知有用之用，而莫知無用之用也。',
+      'amor-fati':'Meine Formel für die Größe am Menschen ist amor fati.'
+    }[id] || '';
+  };
+  window.toggleOriginal = function(){ var el=$('origText'); if(el) el.classList.toggle('on'); };
+  window.openAuthorSaved = function(author){ state.savedOnly=true; state.filter='all'; persist(); tab('library'); setTimeout(function(){ $('search').value=author; renderLibrary(); },0); };
+
+  var savedToggle = $('savedToggle');
+  if(savedToggle && !document.querySelector('.filter-actions')){
+    savedToggle.outerHTML = '<div class="filter-actions"><button id="savedToggle" class="saved-toggle">Show saved</button><button id="clearFilter" class="saved-toggle">Clear</button></div><p class="library-note">An accumulation of daily specimens — saved, unsaved, sorted, and returned to.</p>';
+  }
+
   window.renderToday = function(){
-    const total = todayIds.length + 2;
-    const hour = new Date().getHours();
-    const greet = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-    $('bars').innerHTML = Array.from({length:total},(_,i)=>'<span class="'+(i==0?'active':'')+'"></span>').join('');
-    $('snap').innerHTML = `<section class='today-page center'><div class='star'>✦</div><div class='kicker ink'>Daily specimens</div><h1>${greet}, ${state.name.split(' ')[0]}.</h1><p class='intro'>Four domains. Four distilled readings. No feed, no noise.</p><div class='streak-line'>Streak · Day ${streak()}</div></section>` + todayIds.map(id=>{let p=path(id);let heart=state.todayHearts.includes(id);return `<section class='today-page'><div style='display:flex;justify-content:space-between'><div class='kicker'>${domainName(p.d)} · ${p.m} min</div><button onclick='toggleTodayHeart("${p.id}")' style='color:var(--earth);font-size:24px'>${heart?'♥':'♡'}</button></div><div class='quote-mark'>“</div><blockquote class='quote'>${p.q}</blockquote><div class='author'>${sourceText(p)}</div><p class='blurb'>${p.b}</p></section>`}).join('') + `<section class='today-page center'><div class='star'>✦</div><h1>That is today.</h1><p class='intro'>A beautiful stop, not another scroll. Go use one idea.</p><div class='streak-line'>Library holds the expanded archive</div></section>`;
-    $('snap').onscroll=e=>{let idx=Math.round(e.target.scrollTop/e.target.clientHeight);$('count').textContent=(idx+1)+'/'+total;[...$('bars').children].forEach((b,i)=>b.classList.toggle('active',i<=idx))};
+    var total = 4;
+    var hour = new Date().getHours();
+    var greet = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    $('bars').innerHTML = Array.from({length:total},function(_,i){ return '<span class="'+(i===0?'active':'')+'"></span>'; }).join('');
+    $('count').textContent = '1/4';
+    $('snap').innerHTML = todayIds.map(function(id,idx){
+      var p = path(id);
+      var heart = state.todayHearts.includes(id);
+      var greeting = idx===0 ? '<div class="kicker ink">'+greet+', '+state.name.split(' ')[0]+'</div>' : '';
+      return '<section class="today-page">'+greeting+'<div style="display:flex;justify-content:space-between;margin-top:'+(idx===0?'32px':'0')+'"><div class="kicker">'+domainName(p.d)+' · daily wisdom</div><button onclick="toggleTodayHeart(\''+p.id+'\')" style="color:var(--earth);font-size:24px">'+(heart?'♥':'♡')+'</button></div><div class="quote-mark">“</div><blockquote class="quote">'+p.q+'</blockquote><div class="author">'+sourceText(p)+'</div><p class="blurb">'+p.b+'</p></section>';
+    }).join('');
+    $('snap').onscroll = function(e){
+      var idx = Math.round(e.target.scrollTop / e.target.clientHeight);
+      $('count').textContent = (idx+1) + '/4';
+      Array.prototype.slice.call($('bars').children).forEach(function(b,i){ b.classList.toggle('active',i<=idx); });
+    };
   };
+
   window.renderLibrary = function(){
-    $('filters').innerHTML=domains.filter(d=>d[0]!=='all').map(d=>`<button class='${state.filter===d[0]?'on':''}' onclick='state.filter="${d[0]}";persist();renderLibrary()'>${d[1]}</button>`).join('');
-    if($('savedToggle')){$('savedToggle').innerHTML='Show saved';$('savedToggle').classList.toggle('on',state.savedOnly);$('savedToggle').onclick=()=>{state.savedOnly=true;persist();renderLibrary()};}
-    if($('clearFilter')) $('clearFilter').onclick=()=>{state.savedOnly=false;state.filter='all';$('search').value='';persist();renderLibrary()};
-    let q=$('search').value.toLowerCase();
-    let arr=paths.filter(p=>(state.filter==='all'||p.d===state.filter)&&(!state.savedOnly||isSaved(p.id))&&(!q||[p.t,p.b,p.q,sourceText(p),p.author,domainName(p.d)].join(' ').toLowerCase().includes(q)));
-    $('paths').innerHTML=arr.map(p=>`<article class='row'><button style='color:var(--earth)' onclick='toggleSave("${p.id}")'>${isSaved(p.id)?'♥':domains.find(d=>d[0]===p.d)[2]}</button><button onclick='openReader("${p.id}")' style='text-align:left'><div class='row-meta'>${p.m} min · ${domainName(p.d)}</div><div class='row-title'>${p.t}</div><div class='row-blurb'>${p.b}</div></button><button onclick='openReader("${p.id}")'>→</button></article>`).join('');
+    $('filters').innerHTML = domains.filter(function(d){return d[0]!=='all'}).map(function(d){ return '<button class="'+(state.filter===d[0]?'on':'')+'" onclick="state.filter=\''+d[0]+'\';persist();renderLibrary()">'+d[1]+'</button>'; }).join('');
+    var st=$('savedToggle'); if(st){ st.innerHTML='Show saved'; st.classList.toggle('on',state.savedOnly); st.onclick=function(){ state.savedOnly=true; persist(); renderLibrary(); }; }
+    var clear=$('clearFilter'); if(clear){ clear.onclick=function(){ state.savedOnly=false; state.filter='all'; $('search').value=''; persist(); renderLibrary(); }; }
+    var q=$('search').value.toLowerCase();
+    var arr=paths.filter(function(p){ return (state.filter==='all'||p.d===state.filter) && (!state.savedOnly||isSaved(p.id)) && (!q||[p.t,p.b,p.q,sourceText(p),p.author,domainName(p.d)].join(' ').toLowerCase().includes(q)); });
+    $('paths').innerHTML=arr.map(function(p){ return '<article class="row"><button style="color:var(--earth)" onclick="toggleSave(\''+p.id+'\')">'+(isSaved(p.id)?'♥':domains.find(function(d){return d[0]===p.d})[2])+'</button><button onclick="openReader(\''+p.id+'\')" style="text-align:left"><div class="row-meta">'+p.m+' min · '+domainName(p.d)+'</div><div class="row-title">'+p.t+'</div><div class="row-blurb">'+p.b+'</div></button><button onclick="openReader(\''+p.id+'\')">→</button></article>'; }).join('');
   };
+
   window.openReader = function(id){
-    current=id;let p=path(id);$('rmeta').textContent=domainName(p.d)+' · '+p.m+' min';$('rheart').textContent=isSaved(id)?'♥':'♡';let original=originalText(id);
-    $('readerBody').innerHTML=`<div class='kicker'>Specimen</div><h1>${p.t}</h1><p class='lead'>${p.b}</p><div class='rq'><blockquote>"${p.q}"</blockquote><div class='author'>${sourceText(p)}</div>${original?`<button class='orig-btn' onclick='toggleOriginal()'>Show original</button><div id='origText' class='orig-text'>${original}</div>`:''}</div><div class='reader-section'><div class='kicker ink'>Dive deeper</div>${p.read.map(x=>'<p>'+x+'</p>').join('')}<div class='feedback'><button onclick='vote("useful")' class='${state.votes[id]==='useful'?'on':''}'>↑ More like this</button><button onclick='vote("less")' class='${state.votes[id]==='less'?'on':''}'>↓ Less like this</button></div></div>`;
-    $('reader').classList.add('on');recordRead(p.m);renderToday();
+    current=id; var p=path(id); $('rmeta').textContent=domainName(p.d)+' · '+p.m+' min'; $('rheart').textContent=isSaved(id)?'♥':'♡';
+    var original=originalText(id);
+    $('readerBody').innerHTML='<div class="kicker">Specimen</div><h1>'+p.t+'</h1><p class="lead">'+p.b+'</p><div class="rq"><blockquote>"'+p.q+'"</blockquote><div class="author">'+sourceText(p)+'</div>'+(original?'<button class="orig-btn" onclick="toggleOriginal()">Show original</button><div id="origText" class="orig-text">'+original+'</div>':'')+'</div><div class="reader-section"><div class="kicker ink">Dive deeper</div>'+p.read.map(function(x){return '<p>'+x+'</p>';}).join('')+'<div class="feedback"><button onclick="vote(\'useful\')" class="'+(state.votes[id]==='useful'?'on':'')+'">↑ More like this</button><button onclick="vote(\'less\')" class="'+(state.votes[id]==='less'?'on':'')+'">↓ Less like this</button></div></div>';
+    $('reader').classList.add('on'); recordRead(p.m); renderToday();
   };
+
   window.renderSelf = function(){
-    $('nickname').textContent=state.name;$('username').textContent='@'+state.user;$('avatarLetter').textContent=state.name[0].toUpperCase();$('streak').textContent=streak();$('minutes').textContent=totalMinutes();$('ideas').textContent=state.saved.length;$('days').innerHTML=last21().map((d,i)=>i===20?`<span class='todaydot'><i class='dot ${d.minutes?'done':''}'></i></span>`:`<i class='dot ${d.minutes?'done':''}'></i>`).join('');
-    let counts={};state.saved.forEach(id=>{let p=path(id);if(p){let a=sourceText(p).split(' · ')[0];counts[a]=(counts[a]||0)+1}});let rows=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);$('authors').innerHTML=rows.map((r,i)=>`<button class='author-row' onclick='openAuthorSaved("${r[0].replace(/"/g,'&quot;')}")'><span class='idx'>0${i+1}</span><span class='aname'>${r[0]}</span><span class='count'>${r[1]} saved →</span></button>`).join('');
+    $('nickname').textContent=state.name; $('username').textContent='@'+state.user; $('avatarLetter').textContent=state.name[0].toUpperCase(); $('streak').textContent=streak(); $('minutes').textContent=totalMinutes(); $('ideas').textContent=state.saved.length;
+    $('days').innerHTML=last21().map(function(d,i){ return i===20?'<span class="todaydot"><i class="dot '+(d.minutes?'done':'')+'"></i></span>':'<i class="dot '+(d.minutes?'done':'')+'"></i>'; }).join('');
+    var counts={}; state.saved.forEach(function(id){ var p=path(id); if(p){ var a=sourceText(p).split(' · ')[0]; counts[a]=(counts[a]||0)+1; } });
+    var rows=Object.entries(counts).sort(function(a,b){return b[1]-a[1]}).slice(0,5);
+    $('authors').innerHTML=rows.map(function(r,i){ return '<button class="author-row" onclick="openAuthorSaved(\''+r[0].replace(/'/g,'&#39;')+'\')"><span class="idx">0'+(i+1)+'</span><span class="aname">'+r[0]+'</span><span class="count">'+r[1]+' saved →</span></button>'; }).join('');
   };
+
   renderToday(); renderLibrary(); renderSelf();
 })();
-</script></body>`);
+</script>
+`;
+h = h.replace('</body>', runtime + '</body>');
 
 fs.writeFileSync('dist/index.html', h);
