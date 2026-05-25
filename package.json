@@ -12,5 +12,6 @@
     "framer-motion": "latest",
     "lucide-react": "latest"
   },
-  "devDependencies": {}
+  "devDependencies": {},
+  "_deploy": "coherent-ui-20260524"
 }
