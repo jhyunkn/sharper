@@ -1,0 +1,21 @@
+{
+  "name": "imprint-content-pipeline",
+  "version": "1.0.0",
+  "description": "Content generation pipeline for Imprint — generates specimen cards via Claude API and publishes to Supabase",
+  "scripts": {
+    "generate": "tsx src/run.ts",
+    "generate:dry": "tsx src/run.ts -- --dry-run",
+    "generate:domain": "tsx src/run.ts -- --domain",
+    "generate:author": "tsx src/run.ts -- --author"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.54.0",
+    "@supabase/supabase-js": "^2.50.0",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0"
+  }
+}
