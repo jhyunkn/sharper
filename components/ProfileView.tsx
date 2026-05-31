@@ -6,7 +6,8 @@ import { motion } from 'framer-motion';
 import { getProfile, clearProfile } from '@/lib/storage';
 import { getArchetype } from '@/lib/archetypes';
 import { getSupabase } from '@/lib/supabase';
-import { quotes } from '@/lib/quotes';
+import { quotes as localQuotes } from '@/lib/quotes';
+import { generateInsightFromProfile } from '@/lib/insights';
 import { UserProfile, UserInsight } from '@/lib/types';
 import BottomNav from './BottomNav';
 
@@ -21,16 +22,39 @@ export default function ProfileView() {
     if (!p) { router.replace('/'); return; }
     setProfile(p);
 
+    if (p.savedQuoteIds.length === 0) return;
+
+    // Try Supabase first for richer card metadata, fall back to local
     const supabase = getSupabase();
-    if (supabase && p.id) {
+    const buildInsight = (cards: { domain: string; themes: string[]; author: string }[]) => {
+      const saved = cards.filter(c => p.savedQuoteIds.includes((c as { id?: string }).id ?? ''));
+      const allCards = saved.length > 0 ? saved : cards;
+
+      const themeCounts: Record<string, number> = {};
+      const domainCounts: Record<string, number> = {};
+      const authorCounts: Record<string, number> = {};
+      for (const c of allCards) {
+        (c.themes || []).forEach((t: string) => { themeCounts[t] = (themeCounts[t] || 0) + 1; });
+        domainCounts[c.domain] = (domainCounts[c.domain] || 0) + 1;
+        authorCounts[c.author] = (authorCounts[c.author] || 0) + 1;
+      }
+      const topThemes = Object.entries(themeCounts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(e => e[0]);
+      const topDomains = Object.entries(domainCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(e => e[0]);
+      const topAuthors = Object.entries(authorCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(e => e[0]);
+      setInsight(generateInsightFromProfile(p.archetypeId, topThemes, topDomains, topAuthors, p.name));
+    };
+
+    if (supabase && p.savedQuoteIds.length > 0) {
       supabase
-        .from('user_insights')
-        .select('signal, mindset, dos, donts, generated_at')
-        .eq('user_id', p.id)
-        .single()
+        .from('specimen_cards')
+        .select('id, domain, themes, author')
+        .in('id', p.savedQuoteIds)
         .then(({ data }) => {
-          if (data) setInsight({ signal: data.signal, mindset: data.mindset, dos: data.dos, donts: data.donts, generatedAt: data.generated_at });
+          if (data && data.length > 0) buildInsight(data);
+          else buildInsight(localQuotes.filter(q => p.savedQuoteIds.includes(q.id)).map(q => ({ id: q.id, domain: q.category, themes: q.themes, author: q.author })));
         });
+    } else {
+      buildInsight(localQuotes.filter(q => p.savedQuoteIds.includes(q.id)).map(q => ({ id: q.id, domain: q.category, themes: q.themes, author: q.author })));
     }
   }, [router]);
 
@@ -44,7 +68,7 @@ export default function ProfileView() {
 
   const categoryMap: Record<string, number> = {};
   for (const id of profile.viewedQuoteIds) {
-    const q = quotes.find((q) => q.id === id);
+    const q = localQuotes.find((q) => q.id === id);
     if (q) categoryMap[q.category] = (categoryMap[q.category] || 0) + 1;
   }
   const topCategories = Object.entries(categoryMap).sort((a, b) => b[1] - a[1]).slice(0, 3);
