@@ -24,6 +24,7 @@ export default function ArchetypeReveal() {
     e.preventDefault();
     if (!name.trim() || !archetype) return;
     saveProfile({
+      id: crypto.randomUUID(),
       name: name.trim(),
       archetypeId,
       savedQuoteIds: [],

@@ -31,9 +31,18 @@ export interface QuizOption {
 }
 
 export interface UserProfile {
+  id: string;
   name: string;
   archetypeId: string;
   savedQuoteIds: string[];
   viewedQuoteIds: string[];
   createdAt: number;
+}
+
+export interface UserInsight {
+  signal: string;
+  mindset: string;
+  dos: string[];
+  donts: string[];
+  generatedAt: string;
 }
