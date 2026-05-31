@@ -16,11 +16,12 @@ import BottomNav from './BottomNav';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const SPRING_NAV  = { type: 'spring' as const, stiffness: 140, damping: 22, mass: 1.3 };
-const SPRING_BACK = { type: 'spring' as const, stiffness: 200, damping: 28, mass: 0.9 };
-const SNAP_DIST   = 0.28;  // fraction of vh to trigger snap
-const SNAP_VEL    = 420;   // px/s to trigger snap
-const LOG_K       = 220;   // logarithmic resistance factor
+// Apple-calibrated springs: quick settle, very slight overshoot, no jitter
+const SPRING_NAV  = { type: 'spring' as const, stiffness: 300, damping: 30, mass: 1 };
+const SPRING_BACK = { type: 'spring' as const, stiffness: 360, damping: 34, mass: 1 };
+const SNAP_DIST   = 0.22;  // 22% of width — snap on short intentional swipes
+const SNAP_VEL    = 180;   // px/s — snap on any purposeful flick
+const EDGE_K      = 90;    // boundary-only resistance factor
 
 const DOMAIN_COLOR: Record<string, string> = {
   philosophy:   '#7B9BCC',
@@ -50,8 +51,8 @@ const DOMAIN_LABEL: Record<string, string> = {
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
 
-/** Logarithmic resistance — pulling feels heavier the further you drag */
-function logResist(x: number, k = LOG_K): number {
+/** Logarithmic resistance — used only at hard boundaries */
+function logResist(x: number, k = EDGE_K): number {
   return Math.sign(x) * k * Math.log1p(Math.abs(x) / k);
 }
 
@@ -137,6 +138,8 @@ function QuoteCard({
   onContextChange,
   lightX,
   lightY,
+  deckX,
+  cardIndex,
 }: {
   quote: Quote;
   isActive: boolean;
@@ -146,6 +149,8 @@ function QuoteCard({
   onContextChange: (open: boolean) => void;
   lightX: MotionValue<number>;
   lightY: MotionValue<number>;
+  deckX: MotionValue<number>;
+  cardIndex: number;
 }) {
   const [saved, setSaved] = useState(false);
   const color = DOMAIN_COLOR[quote.category] ?? archetypeColor;
@@ -159,26 +164,42 @@ function QuoteCard({
     onToggleSave(quote.id);
   };
 
+  // How far this card is from the viewport center, normalised [0 = centred, 1 = one screen away]
+  const cardDist = useTransform(deckX, (x) => {
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 390;
+    return Math.min(1, Math.abs(x + cardIndex * vw) / vw);
+  });
+  // Compress slightly while off-screen — gives adjacent cards a sense of depth
+  const cardScale = useTransform(cardDist, [0, 1], [1, 0.92]);
+  // Dim off-screen cards so the active one pops
+  const dimOpacity = useTransform(cardDist, [0, 0.15, 1], [0, 0, 0.45]);
+
   // Atmosphere: ambient glow tracks the light source
   const glowX = useTransform(lightX, v => `${v}%`);
   const glowY = useTransform(lightY, v => `${v + 15}%`);
   const glowBg = useMotionTemplate`radial-gradient(ellipse 110% 80% at ${glowX} ${glowY}, ${color}12 0%, transparent 72%)`;
 
+  // Faster entrance so content appears while spring is still settling
   const item = (delay: number) => ({
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 14 },
     show: {
       opacity: 1, y: 0,
-      transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+      transition: { duration: 0.42, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
     },
   });
 
   return (
-    <div className="relative w-full h-full overflow-hidden">
+    <motion.div className="relative w-full h-full overflow-hidden" style={{ scale: cardScale }}>
       {/* Atmospheric ambient glow */}
       <motion.div
         className="absolute inset-0 pointer-events-none"
         style={{ background: glowBg, opacity: isActive ? 1 : 0 }}
         transition={{ duration: 0.8 }}
+      />
+      {/* Dim overlay — fades in as card moves off-screen */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none z-10 bg-[#080808]"
+        style={{ opacity: dimOpacity }}
       />
 
       {/* ── QUOTE VIEW ── */}
@@ -196,15 +217,15 @@ function QuoteCard({
               <AnimatePresence>
                 {isActive && (
                   <>
-                    <motion.p key="domain" variants={item(0)} initial="hidden" animate="show" exit={{ opacity: 0, transition: { duration: 0.15 } }} className="text-[10px] tracking-[0.4em] uppercase" style={{ color: color + '99' }}>
+                    <motion.p key="domain" variants={item(0)} initial="hidden" animate="show" exit={{ opacity: 0, transition: { duration: 0.12 } }} className="text-[10px] tracking-[0.4em] uppercase" style={{ color: color + '99' }}>
                       {DOMAIN_LABEL[quote.category] ?? quote.category}
                     </motion.p>
 
-                    <motion.blockquote key="quote" variants={item(0.07)} initial="hidden" animate="show" exit={{ opacity: 0, transition: { duration: 0.15 } }} className="font-serif text-[1.65rem] leading-[1.42] text-[#f5f0e8]">
+                    <motion.blockquote key="quote" variants={item(0.05)} initial="hidden" animate="show" exit={{ opacity: 0, transition: { duration: 0.12 } }} className="font-serif text-[1.65rem] leading-[1.42] text-[#f5f0e8]">
                       &ldquo;{quote.text}&rdquo;
                     </motion.blockquote>
 
-                    <motion.div key="author" variants={item(0.17)} initial="hidden" animate="show" exit={{ opacity: 0, transition: { duration: 0.15 } }} className="flex items-center gap-3">
+                    <motion.div key="author" variants={item(0.12)} initial="hidden" animate="show" exit={{ opacity: 0, transition: { duration: 0.12 } }} className="flex items-center gap-3">
                       <div className="h-px w-5 shrink-0" style={{ background: color + '55' }} />
                       <div>
                         <p className="text-sm text-[#aaa]">{quote.author}</p>
@@ -213,7 +234,7 @@ function QuoteCard({
                     </motion.div>
 
                     {quote.themes.length > 0 && (
-                      <motion.div key="themes" variants={item(0.26)} initial="hidden" animate="show" exit={{ opacity: 0, transition: { duration: 0.15 } }} className="flex flex-wrap gap-1.5">
+                      <motion.div key="themes" variants={item(0.18)} initial="hidden" animate="show" exit={{ opacity: 0, transition: { duration: 0.12 } }} className="flex flex-wrap gap-1.5">
                         {quote.themes.slice(0, 3).map(t => (
                           <span key={t} className="text-[9px] tracking-widest uppercase border px-2.5 py-1" style={{ borderColor: color + '22', color: color + '55' }}>
                             {t}
@@ -224,7 +245,7 @@ function QuoteCard({
 
                     {/* Breathing depth indicator */}
                     {hasContext && (
-                      <motion.div key="depth-dots" variants={item(0.34)} initial="hidden" animate="show" exit={{ opacity: 0, transition: { duration: 0.1 } }} className="flex items-center gap-[5px]">
+                      <motion.div key="depth-dots" variants={item(0.23)} initial="hidden" animate="show" exit={{ opacity: 0, transition: { duration: 0.1 } }} className="flex items-center gap-[5px]">
                         {[0, 0.4, 0.8].map((delay, i) => (
                           <motion.span key={i} className="block w-[3px] h-[3px] rounded-full" style={{ background: color }} animate={{ opacity: [0.15, 0.5, 0.15] }} transition={{ duration: 2.4, repeat: Infinity, delay, ease: 'easeInOut' }} />
                         ))}
@@ -299,7 +320,7 @@ function QuoteCard({
       >
         <SaveButton saved={saved} onToggle={handleToggle} color={color} />
       </motion.div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -378,13 +399,20 @@ export default function QuoteFeed() {
       const atEnd   = idx === cards.length - 1;
 
       if (!last) {
-        // ── During drag ───────────────────────────────────────────────────
+        // ── During drag — 1:1 finger tracking everywhere ──────────────────
+        // Only apply resistance at the hard boundary (no more cards that way).
         const blocked = (mx > 0 && atStart) || (mx < 0 && atEnd);
-        const delta   = blocked ? logResist(mx, 80) : logResist(mx);
+        const delta   = blocked ? logResist(mx, EDGE_K) : mx;
         deckX.set(-idx * vw + delta);
 
+        // Light pulse when crossing snap threshold — signals "ready to snap"
         if (!thresholdFired.current && Math.abs(mx) > vw * SNAP_DIST) {
-          haptic(12);
+          haptic(6);
+          thresholdFired.current = true;
+        }
+        // Bounce pulse when hitting the hard wall at start/end
+        if (blocked && Math.abs(mx) > 18 && !thresholdFired.current) {
+          haptic([3, 40, 3]);
           thresholdFired.current = true;
         }
       } else {
@@ -400,12 +428,12 @@ export default function QuoteFeed() {
         if (goNext) {
           const ni = idx + 1;
           setActiveIndex(ni);
-          haptic([5, 28, 5]);
+          haptic([4, 14, 8]);   // crisp double-tap: light then slightly heavier
           animate(deckX, -ni * vw, SPRING_NAV);
         } else if (goPrev) {
           const ni = idx - 1;
           setActiveIndex(ni);
-          haptic([5, 28, 5]);
+          haptic([4, 14, 8]);
           animate(deckX, -ni * vw, SPRING_NAV);
         } else {
           animate(deckX, -idx * vw, SPRING_BACK);
@@ -492,6 +520,8 @@ export default function QuoteFeed() {
                   onToggleSave={handleToggleSave}
                   lightX={lightX}
                   lightY={lightY}
+                  deckX={deckX}
+                  cardIndex={gi}
                 />
               </div>
             );
