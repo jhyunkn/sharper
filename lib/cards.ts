@@ -42,22 +42,24 @@ export async function fetchCards(
   }
 
   try {
-    // 1. Fetch affinity-matched unseen cards first
+    // 1. Fetch affinity-matched unseen cards first (active only)
     const { data: affinityCards } = await supabase
       .from('specimen_cards')
       .select('id, text, author, author_title, domain, sub_domain, themes, archetype_affinity, quality_score')
+      .eq('is_active', true)
       .contains('archetype_affinity', [archetypeId])
       .not('id', 'in', `(${viewedIds.length ? viewedIds.slice(-200).join(',') : 'null'})`)
       .order('quality_score', { ascending: false })
       .limit(Math.floor(limit * 0.6));
 
-    // 2. Fill remaining slots with other cards
+    // 2. Fill remaining slots with other active cards
     const affinityIds = (affinityCards ?? []).map((c: SpecimenCard) => c.id);
     const excludeIds = [...viewedIds.slice(-200), ...affinityIds];
 
     const { data: restCards } = await supabase
       .from('specimen_cards')
       .select('id, text, author, author_title, domain, sub_domain, themes, archetype_affinity, quality_score')
+      .eq('is_active', true)
       .not('id', 'in', `(${excludeIds.length ? excludeIds.join(',') : 'null'})`)
       .order('quality_score', { ascending: false })
       .limit(Math.floor(limit * 0.4));
