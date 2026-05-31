@@ -315,7 +315,7 @@ export default function QuoteFeed() {
 
   // Spring-less motion value: we drive it manually with animate() so we
   // get direct drag response AND physics-based snap settlement.
-  const deckY = useMotionValue(0);
+  const deckX = useMotionValue(0);
 
   // Atmosphere motion values — driven by gyro on mobile, pointer on desktop
   const lightX = useMotionValue(50);
@@ -369,57 +369,54 @@ export default function QuoteFeed() {
   const thresholdFired = useRef(false);
 
   const bind = useDrag(
-    ({ movement: [, my], velocity: [, vy], direction: [, dy], last, tap, cancel }) => {
-      if (contextOpen) { cancel?.(); return; }
+    ({ movement: [mx], velocity: [vx], direction: [dx], last, tap }) => {
+      if (contextOpen) return;
 
-      const vh     = window.innerHeight;
-      const idx    = activeRef.current;
-      const atTop  = idx === 0;
-      const atEnd  = idx === cards.length - 1;
+      const vw    = window.innerWidth;
+      const idx   = activeRef.current;
+      const atStart = idx === 0;
+      const atEnd   = idx === cards.length - 1;
 
       if (!last) {
         // ── During drag ───────────────────────────────────────────────────
-        // Hard-block at the boundaries; elsewhere apply log resistance.
-        const blocked = (my > 0 && atTop) || (my < 0 && atEnd);
-        const delta   = blocked ? logResist(my, 80) : logResist(my);
-        deckY.set(-idx * vh + delta);
+        const blocked = (mx > 0 && atStart) || (mx < 0 && atEnd);
+        const delta   = blocked ? logResist(mx, 80) : logResist(mx);
+        deckX.set(-idx * vw + delta);
 
-        // Single haptic pulse when crossing snap threshold
-        if (!thresholdFired.current && Math.abs(my) > vh * SNAP_DIST) {
+        if (!thresholdFired.current && Math.abs(mx) > vw * SNAP_DIST) {
           haptic(12);
           thresholdFired.current = true;
         }
       } else {
         // ── On release ────────────────────────────────────────────────────
         thresholdFired.current = false;
-        if (tap) return; // pure tap — let onClick fire on the card
+        if (tap) return;
 
-        const velPx   = vy * 1000;  // @use-gesture reports velocity in px/ms
-        const snaps   = Math.abs(my) > vh * SNAP_DIST || Math.abs(velPx) > SNAP_VEL;
-        const goNext  = snaps && dy < 0 && !atEnd;
-        const goPrev  = snaps && dy > 0 && !atTop;
+        const velPx = vx * 1000;
+        const snaps = Math.abs(mx) > vw * SNAP_DIST || Math.abs(velPx) > SNAP_VEL;
+        const goNext = snaps && dx < 0 && !atEnd;
+        const goPrev = snaps && dx > 0 && !atStart;
 
         if (goNext) {
           const ni = idx + 1;
           setActiveIndex(ni);
           haptic([5, 28, 5]);
-          animate(deckY, -ni * vh, SPRING_NAV);
+          animate(deckX, -ni * vw, SPRING_NAV);
         } else if (goPrev) {
           const ni = idx - 1;
           setActiveIndex(ni);
           haptic([5, 28, 5]);
-          animate(deckY, -ni * vh, SPRING_NAV);
+          animate(deckX, -ni * vw, SPRING_NAV);
         } else {
-          animate(deckY, -idx * vh, SPRING_BACK);
+          animate(deckX, -idx * vw, SPRING_BACK);
         }
       }
     },
     {
-      axis: 'y',
+      axis: 'x',
       filterTaps: true,
-      // preventScrollAxis must NOT match the drag axis — setting both to 'y'
-      // causes use-gesture to deactivate the gesture entirely on touch devices.
-      // touchAction:'none' on the container handles scroll prevention instead.
+      // pan-y on the container lets the browser own vertical scroll.
+      // We own horizontal — no axis conflict, no touchAction wrestling.
     }
   );
 
@@ -468,19 +465,23 @@ export default function QuoteFeed() {
       <div
         {...bind()}
         className="absolute inset-0 overflow-hidden"
-        style={{ touchAction: contextOpen ? 'pan-y' : 'none' }}
+        style={{ touchAction: 'pan-y' }}
       >
         <motion.div
-          className="absolute inset-x-0 top-0"
-          style={{ y: deckY }}
+          className="absolute inset-y-0 left-0"
+          style={{ x: deckX, display: 'flex' }}
         >
           {cards.slice(W_START, W_END + 1).map((card, localI) => {
             const gi = W_START + localI;
             return (
               <div
                 key={card.id}
-                className="absolute inset-x-0"
-                style={{ top: `calc(${gi} * 100dvh)`, height: '100dvh' }}
+                className="relative shrink-0"
+                style={{
+                  width: '100dvw',
+                  height: '100dvh',
+                  marginLeft: gi === W_START ? `calc(${W_START} * 100dvw)` : 0,
+                }}
               >
                 <QuoteCard
                   quote={card}
@@ -496,21 +497,19 @@ export default function QuoteFeed() {
             );
           })}
 
-          {/* End of deck */}
-          {activeIndex === cards.length - 1 && (
-            <div
-              className="absolute inset-x-0 flex flex-col items-center justify-center gap-5 text-center"
-              style={{ top: `calc(${cards.length} * 100svh)`, height: '100svh' }}
-            >
-              <motion.p animate={{ opacity: [0.08, 0.22, 0.08] }} transition={{ duration: 4, repeat: Infinity }} className="text-4xl" style={{ color: archetypeColor }}>✦</motion.p>
-              <p className="font-serif text-lg text-[#333] italic">You have read everything.</p>
-              <p className="text-[10px] text-[#222] tracking-widest uppercase">Pull down to revisit</p>
-            </div>
-          )}
+          {/* End of deck — shown as an extra card to the right */}
+          <div
+            className="relative shrink-0 flex flex-col items-center justify-center gap-5 text-center"
+            style={{ width: '100dvw', height: '100dvh' }}
+          >
+            <motion.p animate={{ opacity: [0.08, 0.22, 0.08] }} transition={{ duration: 4, repeat: Infinity }} className="text-4xl" style={{ color: archetypeColor }}>✦</motion.p>
+            <p className="font-serif text-lg text-[#333] italic">You have read everything.</p>
+            <p className="text-[10px] text-[#222] tracking-widest uppercase">Swipe right to revisit</p>
+          </div>
         </motion.div>
       </div>
 
-      {/* Scroll hint on first card */}
+      {/* Swipe hint on first card */}
       {activeIndex === 0 && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -518,10 +517,10 @@ export default function QuoteFeed() {
           transition={{ duration: 3.5, delay: 1.5, times: [0, 0.2, 0.7, 1] }}
           className="fixed bottom-32 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none z-30"
         >
-          <motion.div animate={{ y: [0, 5, 0] }} transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}>
-            <div className="w-px h-5 bg-gradient-to-b from-transparent via-[#333] to-transparent mx-auto" />
+          <motion.div animate={{ x: [0, 6, 0] }} transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}>
+            <div className="h-px w-5 bg-gradient-to-r from-transparent via-[#333] to-transparent" />
           </motion.div>
-          <p className="text-[9px] tracking-[0.3em] text-[#2a2a2a] uppercase">drag</p>
+          <p className="text-[9px] tracking-[0.3em] text-[#2a2a2a] uppercase">swipe</p>
         </motion.div>
       )}
 
