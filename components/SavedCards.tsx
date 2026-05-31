@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookmarkX, X } from 'lucide-react';
+import { BookmarkX } from 'lucide-react';
 import { getProfile, unsaveQuote } from '@/lib/storage';
 import { getArchetype } from '@/lib/archetypes';
 import { getSupabase } from '@/lib/supabase';
@@ -100,53 +100,67 @@ function ContextDrawer({
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex flex-col bg-[#080808] overflow-y-auto"
+      initial={{ opacity: 0, y: 28 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 28 }}
+      transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed inset-0 z-50 bg-[#080808] overflow-y-auto"
+      style={{ scrollbarWidth: 'none' } as React.CSSProperties}
     >
-      <div className="px-6 pt-14 pb-8">
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-[10px] tracking-[0.35em] text-[#333] uppercase">sharper</p>
-          <button onClick={onClose} className="text-[#333] hover:text-[#666] transition-colors">
-            <X size={16} />
-          </button>
-        </div>
+      <div className="px-8 pt-14 pb-28">
 
-        {/* Quote echo */}
-        <p className="font-serif text-sm leading-relaxed text-[#444] italic mb-6">
+        {/* Back crumb */}
+        <button
+          onClick={onClose}
+          className="flex items-center gap-2 mb-10 text-[9px] tracking-[0.32em] uppercase"
+          style={{ color: color + '50' }}
+        >
+          <span>←</span>
+          <span>{DOMAIN_LABEL[quote.category] ?? quote.category}</span>
+        </button>
+
+        {/* Echo — very dim */}
+        <p
+          className="font-serif text-[1.25rem] leading-[1.55] mb-5"
+          style={{ color: '#242424' }}
+        >
           &ldquo;{quote.text}&rdquo;
         </p>
-        <div className="w-8 h-px mb-8" style={{ background: color + '33' }} />
+        <div className="flex items-center gap-3 mb-10">
+          <div className="h-px w-5 shrink-0" style={{ background: color + '20' }} />
+          <p className="text-[11px]" style={{ color: '#282828' }}>{quote.author}</p>
+        </div>
 
-        <div className="space-y-8 pb-16">
+        {/* Sections */}
+        <div className="space-y-10">
           {quote.historicalContext && (
-            <section className="space-y-2">
-              <p className="text-[9px] tracking-[0.35em] uppercase" style={{ color: color + '66' }}>
+            <section className="space-y-3">
+              <p className="text-[10px] tracking-[0.42em] uppercase" style={{ color: color + '70' }}>
                 Context
               </p>
-              <p className="text-sm leading-[1.75] text-[#888]">{quote.historicalContext}</p>
+              <p className="text-sm leading-[1.9] text-[#5a5a5a]">{quote.historicalContext}</p>
             </section>
           )}
 
           {quote.meaning && (
-            <section className="space-y-2">
-              <p className="text-[9px] tracking-[0.35em] uppercase" style={{ color: color + '66' }}>
-                What it means
+            <section className="space-y-3">
+              <p className="text-[10px] tracking-[0.42em] uppercase" style={{ color: color + '70' }}>
+                Meaning
               </p>
-              <p className="text-sm leading-[1.75] text-[#888]">{quote.meaning}</p>
+              <p className="text-sm leading-[1.9] text-[#5a5a5a]">{quote.meaning}</p>
             </section>
           )}
 
           {quote.whyItMatters && (
-            <section className="space-y-2">
-              <p className="text-[9px] tracking-[0.35em] uppercase" style={{ color: color + '66' }}>
+            <section className="space-y-3">
+              <p className="text-[10px] tracking-[0.42em] uppercase" style={{ color: color + '70' }}>
                 Why it matters
               </p>
-              <p className="text-sm leading-[1.75] text-[#888]">{quote.whyItMatters}</p>
+              <p className="text-sm leading-[1.9] text-[#5a5a5a]">{quote.whyItMatters}</p>
             </section>
           )}
         </div>
+
       </div>
     </motion.div>
   );
@@ -205,6 +219,7 @@ export default function SavedCards() {
         <div className="px-6 space-y-3">
           {savedQuotes.map((quote, i) => {
             const hasContext = !!(quote.historicalContext || quote.meaning || quote.whyItMatters);
+            const color = DOMAIN_COLOR[quote.category] ?? archetypeColor;
             return (
               <motion.div
                 key={quote.id}
@@ -212,10 +227,12 @@ export default function SavedCards() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04, duration: 0.4 }}
                 className="border border-[#1a1a1a] p-5 space-y-3 group relative"
+                onClick={() => hasContext && setExpandedQuote(quote)}
+                style={{ cursor: hasContext ? 'pointer' : 'default' }}
               >
                 <p
                   className="text-[9px] tracking-[0.3em] uppercase"
-                  style={{ color: archetypeColor + '80' }}
+                  style={{ color: color + '80' }}
                 >
                   {DOMAIN_LABEL[quote.category] ?? quote.category}
                 </p>
@@ -228,16 +245,22 @@ export default function SavedCards() {
                     <p className="text-[10px] text-[#333]">{quote.authorTitle}</p>
                   </div>
                   <div className="flex items-center gap-3">
+                    {/* Breathing dots if context is available */}
                     {hasContext && (
-                      <button
-                        onClick={() => setExpandedQuote(quote)}
-                        className="text-[9px] tracking-[0.25em] uppercase text-[#2a2a2a] hover:text-[#555] transition-colors"
-                      >
-                        learn more
-                      </button>
+                      <div className="flex items-center gap-[4px]">
+                        {[0, 0.4, 0.8].map((delay, di) => (
+                          <motion.span
+                            key={di}
+                            className="block w-[3px] h-[3px] rounded-full"
+                            style={{ background: color }}
+                            animate={{ opacity: [0.15, 0.45, 0.15] }}
+                            transition={{ duration: 2.4, repeat: Infinity, delay, ease: 'easeInOut' }}
+                          />
+                        ))}
+                      </div>
                     )}
                     <button
-                      onClick={() => handleUnsave(quote.id)}
+                      onClick={(e) => { e.stopPropagation(); handleUnsave(quote.id); }}
                       className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 text-[#333] hover:text-[#888]"
                       aria-label="Remove"
                     >

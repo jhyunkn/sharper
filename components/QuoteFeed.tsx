@@ -80,79 +80,6 @@ function SaveButton({ saved, onToggle, color }: { saved: boolean; onToggle: () =
   );
 }
 
-function ContextPanel({
-  quote,
-  color,
-  onClose,
-}: {
-  quote: Quote;
-  color: string;
-  onClose: () => void;
-}) {
-  const hasContext = quote.historicalContext || quote.meaning || quote.whyItMatters;
-  if (!hasContext) return null;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: '100%' }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: '100%' }}
-      transition={{ type: 'spring', stiffness: 340, damping: 38 }}
-      className="absolute inset-0 z-30 overflow-y-auto"
-      style={{ background: '#080808' }}
-      onClick={onClose}
-    >
-      <div
-        className="min-h-full px-8 pt-16 pb-32 space-y-8"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close hint */}
-        <button
-          onClick={onClose}
-          className="flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase"
-          style={{ color: color + '55' }}
-        >
-          <span>←</span> back
-        </button>
-
-        {/* Quote echo */}
-        <p className="font-serif text-sm leading-relaxed text-[#444] italic">
-          &ldquo;{quote.text}&rdquo;
-        </p>
-
-        <div className="w-8 h-px" style={{ background: color + '33' }} />
-
-        {quote.historicalContext && (
-          <section className="space-y-2">
-            <p className="text-[9px] tracking-[0.35em] uppercase" style={{ color: color + '66' }}>
-              Context
-            </p>
-            <p className="text-sm leading-[1.75] text-[#888]">{quote.historicalContext}</p>
-          </section>
-        )}
-
-        {quote.meaning && (
-          <section className="space-y-2">
-            <p className="text-[9px] tracking-[0.35em] uppercase" style={{ color: color + '66' }}>
-              What it means
-            </p>
-            <p className="text-sm leading-[1.75] text-[#888]">{quote.meaning}</p>
-          </section>
-        )}
-
-        {quote.whyItMatters && (
-          <section className="space-y-2">
-            <p className="text-[9px] tracking-[0.35em] uppercase" style={{ color: color + '66' }}>
-              Why it matters
-            </p>
-            <p className="text-sm leading-[1.75] text-[#888]">{quote.whyItMatters}</p>
-          </section>
-        )}
-      </div>
-    </motion.div>
-  );
-}
-
 function QuoteSlide({
   quote,
   index,
@@ -171,14 +98,8 @@ function QuoteSlide({
   const color = DOMAIN_COLOR[quote.category] ?? archetypeColor;
   const hasContext = !!(quote.historicalContext || quote.meaning || quote.whyItMatters);
 
-  useEffect(() => {
-    setSaved(isQuoteSaved(quote.id));
-  }, [quote.id]);
-
-  // Close context panel when card leaves viewport
-  useEffect(() => {
-    if (!isActive) setContextOpen(false);
-  }, [isActive]);
+  useEffect(() => { setSaved(isQuoteSaved(quote.id)); }, [quote.id]);
+  useEffect(() => { if (!isActive) setContextOpen(false); }, [isActive]);
 
   const handleToggle = () => {
     setSaved(s => !s);
@@ -197,7 +118,7 @@ function QuoteSlide({
   return (
     <div
       data-index={index}
-      className="relative flex flex-col items-start justify-center px-8"
+      className="relative overflow-hidden"
       style={{ height: '100svh', scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
     >
       {/* Ambient glow */}
@@ -210,95 +131,202 @@ function QuoteSlide({
         }}
       />
 
-      {/* Card content */}
-      <div className="relative z-10 w-full max-w-sm mx-auto space-y-7">
+      {/* ── QUOTE VIEW ── */}
+      <AnimatePresence>
+        {!contextOpen && (
+          <motion.div
+            key="quote-layer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, y: -12, transition: { duration: 0.22 } }}
+            className="absolute inset-0 flex flex-col justify-center px-8"
+            onClick={() => hasContext && setContextOpen(true)}
+          >
+            <div className="w-full max-w-sm mx-auto space-y-7">
+              <AnimatePresence>
+                {isActive && (
+                  <>
+                    <motion.p
+                      key="domain"
+                      variants={item(0)}
+                      initial="hidden"
+                      animate="show"
+                      exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                      className="text-[10px] tracking-[0.4em] uppercase"
+                      style={{ color: color + '99' }}
+                    >
+                      {DOMAIN_LABEL[quote.category] ?? quote.category}
+                    </motion.p>
 
-        <AnimatePresence>
-          {isActive && (
-            <>
-              <motion.p
-                key="domain"
-                variants={item(0)}
-                initial="hidden"
-                animate="show"
-                exit={{ opacity: 0, transition: { duration: 0.15 } }}
-                className="text-[10px] tracking-[0.4em] uppercase"
-                style={{ color: color + '99' }}
+                    <motion.blockquote
+                      key="quote"
+                      variants={item(0.07)}
+                      initial="hidden"
+                      animate="show"
+                      exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                      className="font-serif text-[1.65rem] leading-[1.42] text-[#f5f0e8]"
+                    >
+                      &ldquo;{quote.text}&rdquo;
+                    </motion.blockquote>
+
+                    <motion.div
+                      key="author"
+                      variants={item(0.17)}
+                      initial="hidden"
+                      animate="show"
+                      exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                      className="flex items-center gap-3"
+                    >
+                      <div className="h-px w-5 shrink-0" style={{ background: color + '55' }} />
+                      <div>
+                        <p className="text-sm text-[#aaa]">{quote.author}</p>
+                        <p className="text-[11px] text-[#444] mt-0.5">{quote.authorTitle}</p>
+                      </div>
+                    </motion.div>
+
+                    {quote.themes.length > 0 && (
+                      <motion.div
+                        key="themes"
+                        variants={item(0.26)}
+                        initial="hidden"
+                        animate="show"
+                        exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                        className="flex flex-wrap gap-1.5"
+                      >
+                        {quote.themes.slice(0, 3).map(t => (
+                          <span
+                            key={t}
+                            className="text-[9px] tracking-widest uppercase border px-2.5 py-1"
+                            style={{ borderColor: color + '22', color: color + '55' }}
+                          >
+                            {t}
+                          </span>
+                        ))}
+                      </motion.div>
+                    )}
+
+                    {/* Breathing dots — signal depth without a button */}
+                    {hasContext && (
+                      <motion.div
+                        key="depth-dots"
+                        variants={item(0.34)}
+                        initial="hidden"
+                        animate="show"
+                        exit={{ opacity: 0, transition: { duration: 0.1 } }}
+                        className="flex items-center gap-[5px]"
+                      >
+                        {[0, 0.4, 0.8].map((delay, i) => (
+                          <motion.span
+                            key={i}
+                            className="block w-[3px] h-[3px] rounded-full"
+                            style={{ background: color }}
+                            animate={{ opacity: [0.15, 0.5, 0.15] }}
+                            transition={{ duration: 2.4, repeat: Infinity, delay, ease: 'easeInOut' }}
+                          />
+                        ))}
+                      </motion.div>
+                    )}
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── CONTEXT VIEW ── */}
+      <AnimatePresence>
+        {contextOpen && (
+          <motion.div
+            key="context-layer"
+            initial={{ opacity: 0, y: 28 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 28, transition: { duration: 0.2 } }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute inset-0 overflow-y-auto"
+            style={{ scrollbarWidth: 'none', overscrollBehavior: 'contain' } as React.CSSProperties}
+          >
+            <div className="px-8 pt-14 pb-32">
+
+              {/* Back crumb */}
+              <button
+                onClick={() => setContextOpen(false)}
+                className="flex items-center gap-2 mb-10 text-[9px] tracking-[0.32em] uppercase"
+                style={{ color: color + '50' }}
               >
-                {DOMAIN_LABEL[quote.category] ?? quote.category}
-              </motion.p>
+                <span>←</span>
+                <span>{DOMAIN_LABEL[quote.category] ?? quote.category}</span>
+              </button>
 
-              <motion.blockquote
-                key="quote"
-                variants={item(0.07)}
-                initial="hidden"
-                animate="show"
-                exit={{ opacity: 0, transition: { duration: 0.15 } }}
-                className="font-serif text-[1.65rem] leading-[1.42] text-[#f5f0e8]"
+              {/* Echo — very dim */}
+              <p
+                className="font-serif text-[1.25rem] leading-[1.55] mb-5"
+                style={{ color: '#242424' }}
               >
                 &ldquo;{quote.text}&rdquo;
-              </motion.blockquote>
+              </p>
+              <div className="flex items-center gap-3 mb-10">
+                <div className="h-px w-5 shrink-0" style={{ background: color + '20' }} />
+                <p className="text-[11px]" style={{ color: '#282828' }}>{quote.author}</p>
+              </div>
 
-              <motion.div
-                key="author"
-                variants={item(0.17)}
-                initial="hidden"
-                animate="show"
-                exit={{ opacity: 0, transition: { duration: 0.15 } }}
-                className="flex items-center gap-3"
-              >
-                <div className="h-px w-5 shrink-0" style={{ background: color + '55' }} />
-                <div>
-                  <p className="text-sm text-[#aaa]">{quote.author}</p>
-                  <p className="text-[11px] text-[#444] mt-0.5">{quote.authorTitle}</p>
-                </div>
-              </motion.div>
-
-              {quote.themes.length > 0 && (
-                <motion.div
-                  key="themes"
-                  variants={item(0.26)}
-                  initial="hidden"
-                  animate="show"
-                  exit={{ opacity: 0, transition: { duration: 0.15 } }}
-                  className="flex flex-wrap gap-1.5"
-                >
-                  {quote.themes.slice(0, 3).map(t => (
-                    <span
-                      key={t}
-                      className="text-[9px] tracking-widest uppercase border px-2.5 py-1"
-                      style={{ borderColor: color + '22', color: color + '55' }}
+              {/* Sections */}
+              <div className="space-y-10">
+                {quote.historicalContext && (
+                  <section className="space-y-3">
+                    <p
+                      className="text-[10px] tracking-[0.42em] uppercase"
+                      style={{ color: color + '70' }}
                     >
-                      {t}
-                    </span>
-                  ))}
-                </motion.div>
-              )}
+                      Context
+                    </p>
+                    <p className="text-sm leading-[1.9] text-[#5a5a5a]">
+                      {quote.historicalContext}
+                    </p>
+                  </section>
+                )}
 
-              {hasContext && (
-                <motion.button
-                  key="learn"
-                  variants={item(0.35)}
-                  initial="hidden"
-                  animate="show"
-                  exit={{ opacity: 0, transition: { duration: 0.15 } }}
-                  onClick={() => setContextOpen(true)}
-                  className="flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-opacity hover:opacity-80"
-                  style={{ color: color + '55' }}
-                >
-                  <span style={{ color: color + '44' }}>✦</span> learn more
-                </motion.button>
-              )}
-            </>
-          )}
-        </AnimatePresence>
-      </div>
+                {quote.meaning && (
+                  <section className="space-y-3">
+                    <p
+                      className="text-[10px] tracking-[0.42em] uppercase"
+                      style={{ color: color + '70' }}
+                    >
+                      Meaning
+                    </p>
+                    <p className="text-sm leading-[1.9] text-[#5a5a5a]">
+                      {quote.meaning}
+                    </p>
+                  </section>
+                )}
 
-      {/* Save button */}
+                {quote.whyItMatters && (
+                  <section className="space-y-3">
+                    <p
+                      className="text-[10px] tracking-[0.42em] uppercase"
+                      style={{ color: color + '70' }}
+                    >
+                      Why it matters
+                    </p>
+                    <p className="text-sm leading-[1.9] text-[#5a5a5a]">
+                      {quote.whyItMatters}
+                    </p>
+                  </section>
+                )}
+              </div>
+
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Save button — hidden while context is open */}
       <motion.div
         className="absolute bottom-28 right-5 z-20"
-        animate={{ opacity: isActive ? 1 : 0 }}
-        transition={{ duration: 0.3, delay: isActive ? 0.3 : 0 }}
+        animate={{ opacity: isActive && !contextOpen ? 1 : 0 }}
+        transition={{ duration: 0.25 }}
+        style={{ pointerEvents: contextOpen ? 'none' : 'auto' }}
+        onClick={(e) => e.stopPropagation()}
       >
         <SaveButton saved={saved} onToggle={handleToggle} color={color} />
       </motion.div>
@@ -320,17 +348,6 @@ function QuoteSlide({
           <p className="text-[9px] tracking-[0.3em] text-[#2a2a2a] uppercase">scroll</p>
         </motion.div>
       )}
-
-      {/* Context panel */}
-      <AnimatePresence>
-        {contextOpen && (
-          <ContextPanel
-            quote={quote}
-            color={color}
-            onClose={() => setContextOpen(false)}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }
