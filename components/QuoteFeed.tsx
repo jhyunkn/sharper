@@ -24,6 +24,7 @@ import { getArchetype } from '@/lib/archetypes';
 import { Quote } from '@/lib/types';
 import BottomNav from './BottomNav';
 import { useFocusCarousel } from '@/hooks/useFocusCarousel';
+import SubconsciousField from './SubconsciousField';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
@@ -157,7 +158,7 @@ function SpatialBackground({
   }, [containerRef]);
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 2 }}>
 
       {/* ── Parallax shell: moves at 12% card speed ── */}
       <div ref={parallaxShellRef} className="absolute inset-0" style={{ willChange: 'transform' }}>
@@ -248,7 +249,16 @@ function QuoteCard({
   const glow = useMotionTemplate`radial-gradient(ellipse 120% 90% at ${gx} ${gy}, ${color}16 0%, transparent 68%)`;
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-[#050505]" style={{ willChange: 'transform, opacity, filter' }}>
+    // Glass: semi-transparent surface so the subconscious field bleeds through
+    <div
+      className="relative w-full h-full overflow-hidden"
+      style={{
+        background: 'rgba(8, 5, 5, 0.70)',
+        backdropFilter: 'blur(28px) saturate(1.1)',
+        WebkitBackdropFilter: 'blur(28px) saturate(1.1)',
+        willChange: 'transform, opacity, filter',
+      }}
+    >
 
       {/* Domain-colored vertical spine */}
       <div className="absolute left-0 inset-y-0 w-px" style={{ background: `linear-gradient(to bottom, transparent, ${color}50 30%, ${color}50 70%, transparent)` }} />
@@ -476,6 +486,13 @@ export default function QuoteFeed() {
 
   return (
     <div className="fixed inset-0 bg-[#050505]">
+      {/* Layer order (back to front):
+          1. #050505 base
+          2. SubconsciousField  — blurry text from nearby cards (z:1)
+          3. SpatialBackground  — grain + atmospheric gradient (z:2)
+          4. Carousel           — glass cards (z:3+)
+      */}
+      <SubconsciousField cards={cards} activeIndex={activeIndex} />
       <SpatialBackground containerRef={containerRef} lx={lx} ly={ly} />
 
       {/* Progress filament — almost invisible, just a trace */}

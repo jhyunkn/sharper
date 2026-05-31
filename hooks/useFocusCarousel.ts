@@ -50,8 +50,11 @@ function vibrate(pattern: number | number[]) {
   }
 }
 
+// The "epiphany" settle: scale and opacity ease naturally, but filter clears
+// in 60ms — almost instant. This mimics the cognitive "click" of an idea
+// snapping into focus, which is faster than any physical motion.
 const SETTLE_TRANSITION =
-  'transform 0.38s cubic-bezier(0.16,1,0.3,1), opacity 0.32s ease, filter 0.32s ease';
+  'transform 0.38s cubic-bezier(0.16,1,0.3,1), opacity 0.28s ease, filter 0.06s ease-out';
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
@@ -62,7 +65,7 @@ export function useFocusCarousel({
   inactiveScale   = 0.86,
   inactiveOpacity = 0.18,
   maxBlur         = 7,
-  snapHaptic      = [8, 20, 12],
+  snapHaptic      = 15,  // single crisp pulse — the "click" of a thought into focus
   onSnap,
 }: FocusCarouselOptions): FocusCarouselReturn {
 
