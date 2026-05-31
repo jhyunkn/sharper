@@ -17,6 +17,9 @@ export interface Quote {
   category: 'philosophy' | 'psychology' | 'art' | 'architecture' | 'literature';
   themes: string[];
   archetypeAffinity: string[];
+  historicalContext?: string;
+  meaning?: string;
+  whyItMatters?: string;
 }
 
 export interface QuizQuestion {

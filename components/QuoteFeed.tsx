@@ -80,6 +80,79 @@ function SaveButton({ saved, onToggle, color }: { saved: boolean; onToggle: () =
   );
 }
 
+function ContextPanel({
+  quote,
+  color,
+  onClose,
+}: {
+  quote: Quote;
+  color: string;
+  onClose: () => void;
+}) {
+  const hasContext = quote.historicalContext || quote.meaning || quote.whyItMatters;
+  if (!hasContext) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: '100%' }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: '100%' }}
+      transition={{ type: 'spring', stiffness: 340, damping: 38 }}
+      className="absolute inset-0 z-30 overflow-y-auto"
+      style={{ background: '#080808' }}
+      onClick={onClose}
+    >
+      <div
+        className="min-h-full px-8 pt-16 pb-32 space-y-8"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close hint */}
+        <button
+          onClick={onClose}
+          className="flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase"
+          style={{ color: color + '55' }}
+        >
+          <span>←</span> back
+        </button>
+
+        {/* Quote echo */}
+        <p className="font-serif text-sm leading-relaxed text-[#444] italic">
+          &ldquo;{quote.text}&rdquo;
+        </p>
+
+        <div className="w-8 h-px" style={{ background: color + '33' }} />
+
+        {quote.historicalContext && (
+          <section className="space-y-2">
+            <p className="text-[9px] tracking-[0.35em] uppercase" style={{ color: color + '66' }}>
+              Context
+            </p>
+            <p className="text-sm leading-[1.75] text-[#888]">{quote.historicalContext}</p>
+          </section>
+        )}
+
+        {quote.meaning && (
+          <section className="space-y-2">
+            <p className="text-[9px] tracking-[0.35em] uppercase" style={{ color: color + '66' }}>
+              What it means
+            </p>
+            <p className="text-sm leading-[1.75] text-[#888]">{quote.meaning}</p>
+          </section>
+        )}
+
+        {quote.whyItMatters && (
+          <section className="space-y-2">
+            <p className="text-[9px] tracking-[0.35em] uppercase" style={{ color: color + '66' }}>
+              Why it matters
+            </p>
+            <p className="text-sm leading-[1.75] text-[#888]">{quote.whyItMatters}</p>
+          </section>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 function QuoteSlide({
   quote,
   index,
@@ -94,11 +167,18 @@ function QuoteSlide({
   onToggleSave: (id: string) => void;
 }) {
   const [saved, setSaved] = useState(false);
+  const [contextOpen, setContextOpen] = useState(false);
   const color = DOMAIN_COLOR[quote.category] ?? archetypeColor;
+  const hasContext = !!(quote.historicalContext || quote.meaning || quote.whyItMatters);
 
   useEffect(() => {
     setSaved(isQuoteSaved(quote.id));
   }, [quote.id]);
+
+  // Close context panel when card leaves viewport
+  useEffect(() => {
+    if (!isActive) setContextOpen(false);
+  }, [isActive]);
 
   const handleToggle = () => {
     setSaved(s => !s);
@@ -194,6 +274,21 @@ function QuoteSlide({
                   ))}
                 </motion.div>
               )}
+
+              {hasContext && (
+                <motion.button
+                  key="learn"
+                  variants={item(0.35)}
+                  initial="hidden"
+                  animate="show"
+                  exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                  onClick={() => setContextOpen(true)}
+                  className="flex items-center gap-2 text-[9px] tracking-[0.3em] uppercase transition-opacity hover:opacity-80"
+                  style={{ color: color + '55' }}
+                >
+                  <span style={{ color: color + '44' }}>✦</span> learn more
+                </motion.button>
+              )}
             </>
           )}
         </AnimatePresence>
@@ -225,6 +320,17 @@ function QuoteSlide({
           <p className="text-[9px] tracking-[0.3em] text-[#2a2a2a] uppercase">scroll</p>
         </motion.div>
       )}
+
+      {/* Context panel */}
+      <AnimatePresence>
+        {contextOpen && (
+          <ContextPanel
+            quote={quote}
+            color={color}
+            onClose={() => setContextOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

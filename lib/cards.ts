@@ -17,6 +17,9 @@ export interface SpecimenCard {
   themes: string[];
   archetype_affinity: string[];
   quality_score: number;
+  historical_context?: string;
+  meaning?: string;
+  why_it_matters?: string;
 }
 
 function toQuote(card: SpecimenCard): Quote {
@@ -28,6 +31,9 @@ function toQuote(card: SpecimenCard): Quote {
     category: (card.domain as Quote['category']) || 'philosophy',
     themes: card.themes || [],
     archetypeAffinity: card.archetype_affinity || [],
+    historicalContext: card.historical_context,
+    meaning: card.meaning,
+    whyItMatters: card.why_it_matters,
   };
 }
 
@@ -42,10 +48,12 @@ export async function fetchCards(
   }
 
   try {
+    const SELECT = 'id, text, author, author_title, domain, sub_domain, themes, archetype_affinity, quality_score, historical_context, meaning, why_it_matters';
+
     // 1. Fetch affinity-matched unseen cards first (active only)
     const { data: affinityCards } = await supabase
       .from('specimen_cards')
-      .select('id, text, author, author_title, domain, sub_domain, themes, archetype_affinity, quality_score')
+      .select(SELECT)
       .eq('is_active', true)
       .contains('archetype_affinity', [archetypeId])
       .not('id', 'in', `(${viewedIds.length ? viewedIds.slice(-200).join(',') : 'null'})`)
@@ -58,7 +66,7 @@ export async function fetchCards(
 
     const { data: restCards } = await supabase
       .from('specimen_cards')
-      .select('id, text, author, author_title, domain, sub_domain, themes, archetype_affinity, quality_score')
+      .select(SELECT)
       .eq('is_active', true)
       .not('id', 'in', `(${excludeIds.length ? excludeIds.join(',') : 'null'})`)
       .order('quality_score', { ascending: false })

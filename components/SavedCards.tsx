@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { BookmarkX } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { BookmarkX, X } from 'lucide-react';
 import { getProfile, unsaveQuote } from '@/lib/storage';
 import { getArchetype } from '@/lib/archetypes';
 import { getSupabase } from '@/lib/supabase';
@@ -37,11 +37,11 @@ async function loadSavedCards(ids: string[]): Promise<Quote[]> {
   if (supabase) {
     const { data } = await supabase
       .from('specimen_cards')
-      .select('id, text, author, author_title, domain, themes, archetype_affinity')
+      .select('id, text, author, author_title, domain, themes, archetype_affinity, historical_context, meaning, why_it_matters')
       .in('id', ids);
 
     if (data && data.length > 0) {
-      const map = new Map(data.map((c: { id: string; text: string; author: string; author_title: string; domain: string; themes: string[]; archetype_affinity: string[] }) => [c.id, c]));
+      const map = new Map(data.map((c: { id: string; text: string; author: string; author_title: string; domain: string; themes: string[]; archetype_affinity: string[]; historical_context?: string; meaning?: string; why_it_matters?: string }) => [c.id, c]));
       return ids
         .map((id) => {
           const c = map.get(id);
@@ -54,6 +54,9 @@ async function loadSavedCards(ids: string[]): Promise<Quote[]> {
             category: c.domain as Quote['category'],
             themes: c.themes || [],
             archetypeAffinity: c.archetype_affinity || [],
+            historicalContext: c.historical_context,
+            meaning: c.meaning,
+            whyItMatters: c.why_it_matters,
           } as Quote;
         })
         .filter(Boolean) as Quote[];
@@ -66,11 +69,95 @@ async function loadSavedCards(ids: string[]): Promise<Quote[]> {
     .filter(Boolean) as Quote[];
 }
 
+const DOMAIN_COLOR: Record<string, string> = {
+  philosophy:   '#7B9BCC',
+  psychology:   '#7BAA8C',
+  literature:   '#CC8B8B',
+  poetry:       '#A87BAA',
+  science:      '#7BAACC',
+  art:          '#C9A96E',
+  architecture: '#8B8BAA',
+  music:        '#CC6B6B',
+  business:     '#8BAA7B',
+  spirituality: '#B87BAA',
+  film:         '#7BAACC',
+  sport:        '#CCA06B',
+  activism:     '#CC6B8B',
+  technology:   '#7BCCAA',
+  humor:        '#CCCC6B',
+};
+
+function ContextDrawer({
+  quote,
+  archetypeColor,
+  onClose,
+}: {
+  quote: Quote;
+  archetypeColor: string;
+  onClose: () => void;
+}) {
+  const color = DOMAIN_COLOR[quote.category] ?? archetypeColor;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex flex-col bg-[#080808] overflow-y-auto"
+    >
+      <div className="px-6 pt-14 pb-8">
+        <div className="flex items-center justify-between mb-6">
+          <p className="text-[10px] tracking-[0.35em] text-[#333] uppercase">sharper</p>
+          <button onClick={onClose} className="text-[#333] hover:text-[#666] transition-colors">
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Quote echo */}
+        <p className="font-serif text-sm leading-relaxed text-[#444] italic mb-6">
+          &ldquo;{quote.text}&rdquo;
+        </p>
+        <div className="w-8 h-px mb-8" style={{ background: color + '33' }} />
+
+        <div className="space-y-8 pb-16">
+          {quote.historicalContext && (
+            <section className="space-y-2">
+              <p className="text-[9px] tracking-[0.35em] uppercase" style={{ color: color + '66' }}>
+                Context
+              </p>
+              <p className="text-sm leading-[1.75] text-[#888]">{quote.historicalContext}</p>
+            </section>
+          )}
+
+          {quote.meaning && (
+            <section className="space-y-2">
+              <p className="text-[9px] tracking-[0.35em] uppercase" style={{ color: color + '66' }}>
+                What it means
+              </p>
+              <p className="text-sm leading-[1.75] text-[#888]">{quote.meaning}</p>
+            </section>
+          )}
+
+          {quote.whyItMatters && (
+            <section className="space-y-2">
+              <p className="text-[9px] tracking-[0.35em] uppercase" style={{ color: color + '66' }}>
+                Why it matters
+              </p>
+              <p className="text-sm leading-[1.75] text-[#888]">{quote.whyItMatters}</p>
+            </section>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function SavedCards() {
   const router = useRouter();
   const [savedQuotes, setSavedQuotes] = useState<Quote[]>([]);
   const [archetypeColor, setArchetypeColor] = useState('#c9a96e');
   const [loading, setLoading] = useState(true);
+  const [expandedQuote, setExpandedQuote] = useState<Quote | null>(null);
 
   useEffect(() => {
     const profile = getProfile();
@@ -116,42 +203,65 @@ export default function SavedCards() {
         </div>
       ) : (
         <div className="px-6 space-y-3">
-          {savedQuotes.map((quote, i) => (
-            <motion.div
-              key={quote.id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.04, duration: 0.4 }}
-              className="border border-[#1a1a1a] p-5 space-y-3 group relative"
-            >
-              <p
-                className="text-[9px] tracking-[0.3em] uppercase"
-                style={{ color: archetypeColor + '80' }}
+          {savedQuotes.map((quote, i) => {
+            const hasContext = !!(quote.historicalContext || quote.meaning || quote.whyItMatters);
+            return (
+              <motion.div
+                key={quote.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04, duration: 0.4 }}
+                className="border border-[#1a1a1a] p-5 space-y-3 group relative"
               >
-                {DOMAIN_LABEL[quote.category] ?? quote.category}
-              </p>
-              <blockquote className="font-serif text-base leading-relaxed text-[#d0cbc2]">
-                &ldquo;{quote.text}&rdquo;
-              </blockquote>
-              <div className="flex items-end justify-between">
-                <div>
-                  <p className="text-xs text-[#888]">{quote.author}</p>
-                  <p className="text-[10px] text-[#333]">{quote.authorTitle}</p>
-                </div>
-                <button
-                  onClick={() => handleUnsave(quote.id)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 text-[#333] hover:text-[#888]"
-                  aria-label="Remove"
+                <p
+                  className="text-[9px] tracking-[0.3em] uppercase"
+                  style={{ color: archetypeColor + '80' }}
                 >
-                  <BookmarkX size={14} />
-                </button>
-              </div>
-            </motion.div>
-          ))}
+                  {DOMAIN_LABEL[quote.category] ?? quote.category}
+                </p>
+                <blockquote className="font-serif text-base leading-relaxed text-[#d0cbc2]">
+                  &ldquo;{quote.text}&rdquo;
+                </blockquote>
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className="text-xs text-[#888]">{quote.author}</p>
+                    <p className="text-[10px] text-[#333]">{quote.authorTitle}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {hasContext && (
+                      <button
+                        onClick={() => setExpandedQuote(quote)}
+                        className="text-[9px] tracking-[0.25em] uppercase text-[#2a2a2a] hover:text-[#555] transition-colors"
+                      >
+                        learn more
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleUnsave(quote.id)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 text-[#333] hover:text-[#888]"
+                      aria-label="Remove"
+                    >
+                      <BookmarkX size={14} />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       )}
 
       <BottomNav />
+
+      <AnimatePresence>
+        {expandedQuote && (
+          <ContextDrawer
+            quote={expandedQuote}
+            archetypeColor={archetypeColor}
+            onClose={() => setExpandedQuote(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
