@@ -417,8 +417,9 @@ export default function QuoteFeed() {
     {
       axis: 'y',
       filterTaps: true,
-      pointer: { touch: true },
-      preventScrollAxis: 'y',
+      // preventScrollAxis must NOT match the drag axis — setting both to 'y'
+      // causes use-gesture to deactivate the gesture entirely on touch devices.
+      // touchAction:'none' on the container handles scroll prevention instead.
     }
   );
 
@@ -479,7 +480,7 @@ export default function QuoteFeed() {
               <div
                 key={card.id}
                 className="absolute inset-x-0"
-                style={{ top: `calc(${gi} * 100svh)`, height: '100svh' }}
+                style={{ top: `calc(${gi} * 100dvh)`, height: '100dvh' }}
               >
                 <QuoteCard
                   quote={card}
