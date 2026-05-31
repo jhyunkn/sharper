@@ -43,22 +43,149 @@ const DOMAIN_LABEL: Record<string, string> = {
   humor: 'Humor & Wit',
 };
 
-// ─── Grain + gyro atmosphere ──────────────────────────────────────────────────
+// ─── Texture data URIs ────────────────────────────────────────────────────────
+// Two grain registers: fine (always on) + coarse friction (velocity-driven).
+// Both use stitchTiles so they tile seamlessly on translateX.
 
-const GRAIN = `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.4'/></svg>")`;
+const GRAIN_FINE = `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.42'/></svg>")`;
+const GRAIN_FRICTION = `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='280' height='280'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='0.48' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='280' height='280' filter='url(%23f)' opacity='0.58'/></svg>")`;
 
-function AtmosphereLayer({ lx, ly }: { lx: MotionValue<number>; ly: MotionValue<number> }) {
-  const gx = useTransform(lx, v => `${v}%`);
-  const gy = useTransform(ly, v => `${v}%`);
-  const bg = useMotionTemplate`radial-gradient(ellipse 90% 70% at ${gx} ${gy}, rgba(255,255,255,0.013) 0%, transparent 65%)`;
+/**
+ * SpatialBackground
+ *
+ * Three-layer reactive environment driven by the card scroll container.
+ *
+ * Layer 1 — Parallax shell (translateX at 12% card speed):
+ *   Contains the atmospheric radial gradient and the fine grain.
+ *   Uses card-local progress (scrollLeft % cardWidth) so the parallax
+ *   resets at each snap rather than accumulating across 60 cards.
+ *
+ * Layer 2 — Fine grain (inside parallax shell):
+ *   Always present at 3% opacity, gives the surface material weight.
+ *
+ * Layer 3 — Friction grain (fixed, not parallaxed):
+ *   Opacity driven by rolling-average scroll velocity.
+ *   Represents the "screen surface" friction between viewer and cards.
+ *   Instantly snaps to 0 on scrollend (transition:none + rAF restore).
+ *
+ * All animation is direct DOM mutation — zero React re-renders.
+ * Only `background` on the gradient div is Framer Motion (reactive to gyro).
+ */
+function SpatialBackground({
+  containerRef, lx, ly,
+}: {
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  lx: MotionValue<number>;
+  ly: MotionValue<number>;
+}) {
+  const parallaxShellRef = useRef<HTMLDivElement>(null);
+  const frictionRef      = useRef<HTMLDivElement>(null);
+
+  // Gyro/pointer-driven atmospheric gradient (Framer Motion reactive chain)
+  const gx  = useTransform(lx, v => `${v}%`);
+  const gy  = useTransform(ly, v => `${v}%`);
+  const atm = useMotionTemplate`radial-gradient(ellipse 90% 72% at ${gx} ${gy}, rgba(255,255,255,0.014) 0%, transparent 66%)`;
+
+  useEffect(() => {
+    const container = containerRef.current;
+    const shell     = parallaxShellRef.current;
+    const frict     = frictionRef.current;
+    if (!container || !shell || !frict) return;
+
+    let lastSL   = container.scrollLeft;
+    let lastT    = performance.now();
+    const velBuf: number[] = [];
+    let endTimer: ReturnType<typeof setTimeout>;
+
+    // Start with transition so the very first scroll feels eased
+    frict.style.transition = 'opacity 0.14s ease';
+    frict.style.opacity    = '0';
+
+    const onScroll = () => {
+      const now = performance.now();
+      const dt  = now - lastT;
+      const dx  = Math.abs(container.scrollLeft - lastSL);
+
+      // ── Velocity (5-sample rolling average, ignore large gaps) ──────────
+      if (dt > 0 && dt < 120) {
+        velBuf.push(dx / dt);           // px / ms
+        if (velBuf.length > 5) velBuf.shift();
+      }
+      const avgVel = velBuf.length
+        ? velBuf.reduce((a, b) => a + b) / velBuf.length
+        : 0;
+
+      // ── Friction grain swell ─────────────────────────────────────────────
+      // Map 0 → ~3 px/ms to 0 → 0.11 opacity
+      frict.style.opacity = Math.min(0.11, avgVel * 0.05).toFixed(4);
+
+      // ── Parallax: card-local progress, resets to 0 at every snap ────────
+      // Using scrollLeft % cardWidth means the effect never drifts infinitely.
+      const cw = container.clientWidth || 1;
+      const progress = (container.scrollLeft % cw) / cw;   // 0 → 1 within card
+      shell.style.transform = `translateX(${(-progress * cw * 0.12).toFixed(2)}px)`;
+
+      lastSL = container.scrollLeft;
+      lastT  = now;
+
+      // Debounced settle for browsers without scrollend
+      clearTimeout(endTimer);
+      endTimer = setTimeout(onSettle, 80);
+    };
+
+    const onSettle = () => {
+      velBuf.length = 0;
+      // Instant recession — per spec: "must instantly recede"
+      frict.style.transition = 'none';
+      frict.style.opacity    = '0';
+      // Restore easing for the next drag
+      requestAnimationFrame(() => { frict.style.transition = 'opacity 0.14s ease'; });
+      // Shell returns to translateX(0) naturally as the snap animation
+      // completes (scrollLeft → n*cw, so progress → 0 automatically).
+    };
+
+    container.addEventListener('scroll', onScroll, { passive: true });
+    if ('onscrollend' in window) {
+      container.addEventListener('scrollend', onSettle, { passive: true });
+    }
+
+    return () => {
+      clearTimeout(endTimer);
+      container.removeEventListener('scroll', onScroll);
+      container.removeEventListener('scrollend', onSettle);
+    };
+  }, [containerRef]);
+
   return (
-    <>
-      <motion.div className="fixed inset-0 pointer-events-none z-0" style={{ background: bg }} />
-      <div className="fixed inset-0 pointer-events-none z-0" style={{
-        backgroundImage: GRAIN, backgroundRepeat: 'repeat', backgroundSize: '200px',
-        opacity: 0.038, mixBlendMode: 'overlay',
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+
+      {/* ── Parallax shell: moves at 12% card speed ── */}
+      <div ref={parallaxShellRef} className="absolute inset-0" style={{ willChange: 'transform' }}>
+        {/* Atmospheric light — gyro/pointer driven */}
+        <motion.div className="absolute inset-0" style={{ background: atm }} />
+        {/* Fine grain — always on, surface material */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: GRAIN_FINE,
+          backgroundRepeat: 'repeat',
+          backgroundSize: '200px 200px',
+          opacity: 0.030,
+          mixBlendMode: 'overlay',
+        }} />
+      </div>
+
+      {/* ── Friction grain: fixed, velocity-driven ── */}
+      <div ref={frictionRef} style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: GRAIN_FRICTION,
+        backgroundRepeat: 'repeat',
+        backgroundSize: '280px 280px',
+        opacity: 0,
+        mixBlendMode: 'screen',
+        willChange: 'opacity',
       }} />
-    </>
+
+    </div>
   );
 }
 
@@ -115,41 +242,18 @@ function QuoteCard({
 
   const handleToggle = () => { setSaved(s => !s); onToggleSave(quote.id); };
 
-  // Atmospheric glow: light source follows pointer / gyro
-  const gx  = useTransform(lx, v => `${v}%`);
-  const gy  = useTransform(ly, v => `${v + 18}%`);
-  const glow = useMotionTemplate`radial-gradient(ellipse 120% 90% at ${gx} ${gy}, ${color}18 0%, transparent 68%)`;
-
-  // Author last name — used as faint background watermark
-  const surname = quote.author.split(' ').pop() ?? quote.author;
+  // Per-card domain glow: color accent that reacts to the light source
+  const gx   = useTransform(lx, v => `${v}%`);
+  const gy   = useTransform(ly, v => `${v + 18}%`);
+  const glow = useMotionTemplate`radial-gradient(ellipse 120% 90% at ${gx} ${gy}, ${color}16 0%, transparent 68%)`;
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-[#050505]" style={{ willChange: 'transform, opacity, filter' }}>
 
-      {/* Domain-colored vertical spine — 1px left edge, anchors the layout */}
-      <div className="absolute left-0 inset-y-0 w-px" style={{ background: `linear-gradient(to bottom, transparent, ${color}55 30%, ${color}55 70%, transparent)` }} />
+      {/* Domain-colored vertical spine */}
+      <div className="absolute left-0 inset-y-0 w-px" style={{ background: `linear-gradient(to bottom, transparent, ${color}50 30%, ${color}50 70%, transparent)` }} />
 
-      {/* Large ghosted surname — fills the upper void with intentional presence */}
-      <div
-        className="absolute right-0 top-0 font-serif pointer-events-none select-none overflow-hidden"
-        style={{
-          fontSize: 'min(42vw, 240px)',
-          lineHeight: 0.82,
-          color,
-          opacity: 0.045,
-          letterSpacing: '-0.04em',
-          paddingTop: '3dvh',
-          paddingRight: '2px',
-          textAlign: 'right',
-          // Subtle vertical overlap so it bleeds into the top edge
-          marginTop: '-4px',
-        }}
-        aria-hidden
-      >
-        {surname}
-      </div>
-
-      {/* Atmospheric light */}
+      {/* Domain color glow — active card only */}
       <motion.div className="absolute inset-0 pointer-events-none" style={{ background: glow, opacity: isActive ? 1 : 0 }} transition={{ duration: 0.7 }} />
 
       {/* ── QUOTE FACE ── */}
@@ -372,7 +476,7 @@ export default function QuoteFeed() {
 
   return (
     <div className="fixed inset-0 bg-[#050505]">
-      <AtmosphereLayer lx={lx} ly={ly} />
+      <SpatialBackground containerRef={containerRef} lx={lx} ly={ly} />
 
       {/* Progress filament — almost invisible, just a trace */}
       <div className="fixed top-0 left-0 right-0 z-50 h-px" style={{ background: '#0d0d0d' }}>
