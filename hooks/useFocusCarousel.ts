@@ -3,14 +3,21 @@
 /**
  * useFocusCarousel
  *
- * Drives a CSS scroll-snap carousel with live optical focus:
- * - Center card: 100% scale, 100% opacity, 0 blur — perfectly sharp
- * - Peripheral cards: scale/opacity/blur interpolated from scroll offset
+ * CSS scroll-snap carrier + live optical focus.
  *
- * All visual transforms are applied directly to the DOM during scroll,
- * bypassing React rendering entirely — consistent 60fps.
+ * Cards are observed via a scroll event listener. Transforms (scale,
+ * opacity, filter:blur) are written directly to each card's style during
+ * scroll — zero React re-renders, 60fps on low-end hardware.
  *
- * Reusable: axis:'x' for horizontal carousels, axis:'y' for vertical lists.
+ * On snap settle:
+ *   1. Transitions are re-enabled (they are suppressed during live scroll
+ *      to prevent CSS easing from fighting live DOM updates)
+ *   2. The active card is nudged to its exact focused state with a short
+ *      ease — the "glass plate locking in" moment
+ *   3. navigator.vibrate fires the haptic detent
+ *
+ * axis:'x' → horizontal carousel
+ * axis:'y' → vertical list (Saved view, etc.)
  */
 
 import { useRef, useEffect, useCallback } from 'react';
@@ -20,99 +27,92 @@ import { useRef, useEffect, useCallback } from 'react';
 export interface FocusCarouselOptions {
   count: number;
   axis?: 'x' | 'y';
-
-  // Optical states
-  activeScale?: number;       // default 1.0
-  inactiveScale?: number;     // default 0.9
-  inactiveOpacity?: number;   // default 0.3
-  maxBlur?: number;           // default 2.5px — kept small for perf
-
-  // Haptic detent fired the moment a card settles into center
-  snapHaptic?: number | number[];
-
-  // Called when the snapped index changes (after settle, not during scroll)
-  onSnap?: (index: number) => void;
+  activeScale?:       number;  // default 1.0
+  inactiveScale?:     number;  // default 0.86
+  inactiveOpacity?:   number;  // default 0.18
+  maxBlur?:           number;  // default 7  (px)
+  snapHaptic?:        number | number[];
+  onSnap?:            (index: number) => void;
 }
 
 export interface FocusCarouselReturn {
-  containerRef: React.RefObject<HTMLDivElement | null>;
-  setItemRef: (i: number) => (el: HTMLDivElement | null) => void;
-  scrollToIndex: (index: number, behavior?: ScrollBehavior) => void;
+  containerRef:   React.RefObject<HTMLDivElement | null>;
+  setItemRef:     (i: number) => (el: HTMLDivElement | null) => void;
+  scrollToIndex:  (index: number, behavior?: ScrollBehavior) => void;
   getActiveIndex: () => number;
 }
 
-// ─── Haptic helper ────────────────────────────────────────────────────────────
+// ─── Internal helpers ─────────────────────────────────────────────────────────
 
-function haptic(pattern: number | number[]) {
+function vibrate(pattern: number | number[]) {
   if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
     navigator.vibrate(pattern);
   }
 }
 
+const SETTLE_TRANSITION =
+  'transform 0.38s cubic-bezier(0.16,1,0.3,1), opacity 0.32s ease, filter 0.32s ease';
+
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useFocusCarousel({
   count,
-  axis = 'x',
-  activeScale   = 1,
-  inactiveScale = 0.9,
-  inactiveOpacity = 0.3,
-  maxBlur       = 2.5,
-  snapHaptic    = 12,
+  axis            = 'x',
+  activeScale     = 1,
+  inactiveScale   = 0.86,
+  inactiveOpacity = 0.18,
+  maxBlur         = 7,
+  snapHaptic      = [8, 20, 12],
   onSnap,
 }: FocusCarouselOptions): FocusCarouselReturn {
-  const containerRef   = useRef<HTMLDivElement | null>(null);
-  const itemRefs       = useRef<(HTMLDivElement | null)[]>([]);
-  const lastSnapped    = useRef(-1);
-  const onSnapRef      = useRef(onSnap);
-  onSnapRef.current    = onSnap;
 
-  // ── Item ref setter ────────────────────────────────────────────────────────
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const itemRefs     = useRef<(HTMLDivElement | null)[]>([]);
+  const lastSnapped  = useRef(-1);
+  const onSnapRef    = useRef(onSnap);
+  onSnapRef.current  = onSnap;
+
   const setItemRef = useCallback(
     (i: number) => (el: HTMLDivElement | null) => { itemRefs.current[i] = el; },
     []
   );
 
-  // ── Core scroll logic ──────────────────────────────────────────────────────
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-
     const isX = axis === 'x';
 
-    // Applied directly to each item's style — zero React overhead
+    // ── Live scroll: write transforms directly, no transition ────────────────
     const applyTransforms = () => {
-      const viewportSize = isX ? container.clientWidth  : container.clientHeight;
-      const scrollPos    = isX ? container.scrollLeft   : container.scrollTop;
-      const viewCenter   = scrollPos + viewportSize / 2;
+      const vpSize    = isX ? container.clientWidth  : container.clientHeight;
+      const scrollPos = isX ? container.scrollLeft   : container.scrollTop;
+      const vpCenter  = scrollPos + vpSize / 2;
 
-      for (let i = 0; i < itemRefs.current.length; i++) {
-        const el = itemRefs.current[i];
+      for (const el of itemRefs.current) {
         if (!el) continue;
-
         const elOffset = isX ? el.offsetLeft : el.offsetTop;
         const elSize   = isX ? el.offsetWidth : el.offsetHeight;
         const elCenter = elOffset + elSize / 2;
 
-        // 0 = this card is centred, 1 = one full card-width away
-        const dist = Math.min(1, Math.abs(viewCenter - elCenter) / elSize);
-
+        // dist: 0 = perfectly centred, 1 = one full card away
+        const dist    = Math.min(1, Math.abs(vpCenter - elCenter) / elSize);
         const scale   = activeScale   + (inactiveScale   - activeScale)   * dist;
         const opacity = 1             + (inactiveOpacity - 1)             * dist;
         const blur    = maxBlur * dist;
 
-        el.style.transform = `scale(${scale.toFixed(4)})`;
-        el.style.opacity   = opacity.toFixed(4);
-        // Only apply filter when meaningful — avoids compositing cost on center card
-        el.style.filter    = blur > 0.1 ? `blur(${blur.toFixed(2)}px)` : 'none';
+        // Suppress CSS transition during live scroll — prevents easing lag
+        el.style.transition = 'none';
+        el.style.transform  = `scale(${scale.toFixed(4)})`;
+        el.style.opacity    = opacity.toFixed(4);
+        el.style.filter     = blur > 0.15 ? `blur(${blur.toFixed(2)}px)` : 'none';
       }
     };
 
-    // Detect which card is snapped and fire haptic
+    // ── Snap settle: re-enable transition, lock active to perfect focus ───────
     const detectSnap = () => {
-      const viewportSize = isX ? container.clientWidth  : container.clientHeight;
-      const scrollPos    = isX ? container.scrollLeft   : container.scrollTop;
-      const viewCenter   = scrollPos + viewportSize / 2;
+      const vpSize    = isX ? container.clientWidth  : container.clientHeight;
+      const scrollPos = isX ? container.scrollLeft   : container.scrollTop;
+      const vpCenter  = scrollPos + vpSize / 2;
 
       let closestIdx  = 0;
       let closestDist = Infinity;
@@ -122,34 +122,41 @@ export function useFocusCarousel({
         if (!el) continue;
         const elOffset = isX ? el.offsetLeft : el.offsetTop;
         const elSize   = isX ? el.offsetWidth : el.offsetHeight;
-        const elCenter = elOffset + elSize / 2;
-        const d = Math.abs(viewCenter - elCenter);
+        const d = Math.abs(vpCenter - (elOffset + elSize / 2));
         if (d < closestDist) { closestDist = d; closestIdx = i; }
+      }
+
+      // Re-enable transitions for the settle animation
+      for (const el of itemRefs.current) {
+        if (el) el.style.transition = SETTLE_TRANSITION;
+      }
+
+      // Settle active card to exact 100% focus
+      const activeEl = itemRefs.current[closestIdx];
+      if (activeEl) {
+        activeEl.style.transform = 'scale(1)';
+        activeEl.style.opacity   = '1';
+        activeEl.style.filter    = 'none';
       }
 
       if (closestIdx !== lastSnapped.current) {
         lastSnapped.current = closestIdx;
-        haptic(snapHaptic);
+        vibrate(snapHaptic);
         onSnapRef.current?.(closestIdx);
       }
     };
 
-    // Scroll-end detection: prefer native scrollend, fall back to 80ms timeout
+    // scrollend is exact; fallback to 80ms debounce for older browsers
     let endTimer: ReturnType<typeof setTimeout>;
-    const handleScrollEnd = () => {
-      clearTimeout(endTimer);
-      endTimer = setTimeout(detectSnap, 80);
-    };
+    const debouncedSnap = () => { clearTimeout(endTimer); endTimer = setTimeout(detectSnap, 80); };
 
     container.addEventListener('scroll', applyTransforms, { passive: true });
-
     if ('onscrollend' in window) {
       container.addEventListener('scrollend', detectSnap, { passive: true });
     } else {
-      container.addEventListener('scroll', handleScrollEnd, { passive: true });
+      container.addEventListener('scroll', debouncedSnap, { passive: true });
     }
 
-    // Set initial state immediately
     applyTransforms();
     detectSnap();
 
@@ -157,25 +164,20 @@ export function useFocusCarousel({
       clearTimeout(endTimer);
       container.removeEventListener('scroll', applyTransforms);
       container.removeEventListener('scrollend', detectSnap);
-      container.removeEventListener('scroll', handleScrollEnd);
+      container.removeEventListener('scroll', debouncedSnap);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [count, axis, activeScale, inactiveScale, inactiveOpacity, maxBlur, snapHaptic]);
 
-  // ── Programmatic navigation ────────────────────────────────────────────────
   const scrollToIndex = useCallback(
     (index: number, behavior: ScrollBehavior = 'smooth') => {
       const container = containerRef.current;
       const el = itemRefs.current[index];
       if (!container || !el) return;
-
-      const isX = axis === 'x';
-      if (isX) {
-        const target = el.offsetLeft - (container.clientWidth  - el.offsetWidth)  / 2;
-        container.scrollTo({ left: target, behavior });
+      if (axis === 'x') {
+        container.scrollTo({ left: el.offsetLeft - (container.clientWidth  - el.offsetWidth)  / 2, behavior });
       } else {
-        const target = el.offsetTop  - (container.clientHeight - el.offsetHeight) / 2;
-        container.scrollTo({ top: target, behavior });
+        container.scrollTo({ top:  el.offsetTop  - (container.clientHeight - el.offsetHeight) / 2, behavior });
       }
     },
     [axis]
