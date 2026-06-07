@@ -65,6 +65,11 @@ export default function ProfileView() {
 
   const savedCount = profile.savedQuoteIds.length;
   const viewedCount = profile.viewedQuoteIds.length;
+  const stats = [
+    { label: 'Read', value: viewedCount },
+    { label: 'Saved', value: savedCount },
+  ];
+  const dotCount = 14;
 
   const categoryMap: Record<string, number> = {};
   for (const id of profile.viewedQuoteIds) {
@@ -188,15 +193,40 @@ export default function ProfileView() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15, duration: 0.5 }}
-            className="border border-[#1a1a1a] p-6 grid grid-cols-2 gap-4"
+            className="border border-[#1a1a1a] p-6 space-y-5"
           >
-            <div>
-              <p className="font-serif text-3xl text-[#f5f0e8]">{viewedCount}</p>
-              <p className="text-[9px] tracking-widest text-[#444] uppercase mt-1">Read</p>
+            <div className="flex items-center justify-between">
+              <p className="text-[9px] tracking-[0.35em] text-[#333] uppercase">Statistics</p>
+              <p className="text-[9px] tracking-widest text-[#2a2a2a] uppercase">continuous signal</p>
             </div>
-            <div>
-              <p className="font-serif text-3xl text-[#f5f0e8]">{savedCount}</p>
-              <p className="text-[9px] tracking-widest text-[#444] uppercase mt-1">Saved</p>
+
+            <div className="space-y-4">
+              {stats.map((stat) => {
+                const activeDots = Math.min(dotCount, stat.value);
+                return (
+                  <div key={stat.label} className="space-y-2.5">
+                    <div className="flex items-end justify-between">
+                      <p className="text-[9px] tracking-widest text-[#555] uppercase">{stat.label}</p>
+                      <p className="font-serif text-lg leading-none text-[#f5f0e8]">{stat.value}</p>
+                    </div>
+                    <div className="flex gap-1.5">
+                      {Array.from({ length: dotCount }).map((_, i) => {
+                        const active = i < activeDots;
+                        return (
+                          <span
+                            key={i}
+                            className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
+                              active
+                                ? 'bg-[#c9a96e] shadow-[0_0_10px_rgba(201,169,110,0.45)]'
+                                : 'bg-[#161616]'
+                            }`}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </motion.div>
 
