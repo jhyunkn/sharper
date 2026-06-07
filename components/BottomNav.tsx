@@ -15,7 +15,7 @@ export default function BottomNav({ docked = false }: { docked?: boolean }) {
   const positionClass = docked ? 'absolute' : 'fixed';
 
   return (
-    <nav className={`${positionClass} bottom-0 left-0 right-0 z-50 flex justify-around items-center py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-[#080808]/90 backdrop-blur-sm border-t border-[#1e1e1e]`}>
+    <nav className={`${positionClass} bottom-0 left-0 right-0 z-50 flex justify-around items-center py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-[#12110d]/92 backdrop-blur-md border-t border-[#29261f] shadow-[0_-12px_36px_rgba(0,0,0,0.22)]`}>
       {tabs.map(({ href, Icon, label }) => {
         const active = pathname === href;
         return (
@@ -23,10 +23,10 @@ export default function BottomNav({ docked = false }: { docked?: boolean }) {
             key={href}
             onClick={() => router.push(href)}
             className={`flex flex-col items-center gap-1.5 transition-colors duration-200 ${
-              active ? 'text-[#c9a96e]' : 'text-[#444]'
+              active ? 'text-[#c9a96e]' : 'text-[#8f8676]'
             }`}
           >
-            <Icon size={18} strokeWidth={active ? 2 : 1.5} />
+            <Icon size={19} strokeWidth={active ? 2 : 1.7} />
             <span className="text-[9px] tracking-[0.15em] uppercase">{label}</span>
           </button>
         );
