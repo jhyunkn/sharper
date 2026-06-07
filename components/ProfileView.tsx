@@ -193,41 +193,34 @@ export default function ProfileView() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15, duration: 0.5 }}
-            className="border border-[#1a1a1a] p-6 space-y-5"
+            className="border border-[#151515] px-5 py-4 space-y-4"
           >
-            <div className="flex items-center justify-between">
-              <p className="text-[9px] tracking-[0.35em] text-[#333] uppercase">Statistics</p>
-              <p className="text-[9px] tracking-widest text-[#2a2a2a] uppercase">continuous signal</p>
-            </div>
-
-            <div className="space-y-4">
-              {stats.map((stat) => {
-                const activeDots = Math.min(dotCount, stat.value);
-                return (
-                  <div key={stat.label} className="space-y-2.5">
-                    <div className="flex items-end justify-between">
-                      <p className="text-[9px] tracking-widest text-[#555] uppercase">{stat.label}</p>
-                      <p className="font-serif text-lg leading-none text-[#f5f0e8]">{stat.value}</p>
-                    </div>
-                    <div className="flex gap-1.5">
-                      {Array.from({ length: dotCount }).map((_, i) => {
-                        const active = i < activeDots;
-                        return (
-                          <span
-                            key={i}
-                            className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
-                              active
-                                ? 'bg-[#c9a96e] shadow-[0_0_10px_rgba(201,169,110,0.45)]'
-                                : 'bg-[#161616]'
-                            }`}
-                          />
-                        );
-                      })}
-                    </div>
+            {stats.map((stat) => {
+              const activeDots = Math.min(dotCount, stat.value);
+              return (
+                <div key={stat.label} className="flex items-center gap-4">
+                  <div className="w-14 shrink-0">
+                    <p className="text-[9px] tracking-widest text-[#4a4a4a] uppercase">{stat.label}</p>
                   </div>
-                );
-              })}
-            </div>
+                  <div className="flex flex-1 items-center gap-1.5">
+                    {Array.from({ length: dotCount }).map((_, i) => {
+                      const active = i < activeDots;
+                      return (
+                        <span
+                          key={i}
+                          className={`h-1.5 w-1.5 rounded-full transition-all duration-500 ${
+                            active
+                              ? 'bg-[#c9a96e] shadow-[0_0_8px_rgba(201,169,110,0.35)]'
+                              : 'bg-[#1a1a1a]'
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
+                  <p className="w-5 text-right font-serif text-sm text-[#777]">{stat.value}</p>
+                </div>
+              );
+            })}
           </motion.div>
 
           {/* Reading profile */}
