@@ -75,7 +75,7 @@ function AnalyticalThemeRow({ themes, color }: { themes: string[]; color: string
           key={theme}
           className="rounded-full border px-2.5 py-1 text-[8px] tracking-[0.26em] uppercase"
           style={{
-            color: `${color}cc`,
+            color: '#ede8df',
             borderColor: `${color}33`,
             backgroundColor: `${color}0d`,
           }}
