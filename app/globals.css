@@ -36,6 +36,23 @@ body {
   background-color: #12110d !important;
 }
 
+.text-\[\#888\] {
+  color: #b2a997 !important;
+}
+
+.text-\[\#555\] {
+  color: #928878 !important;
+}
+
+.text-\[\#444\],
+.text-\[\#333\],
+.text-\[\#2a2a2a\],
+.text-\[\#222\],
+.text-\[\#1e1e1e\],
+.text-\[\#181818\] {
+  color: #746d60 !important;
+}
+
 ::selection {
   background: #c9a96e33;
 }
