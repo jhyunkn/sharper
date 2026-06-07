@@ -64,6 +64,7 @@ function ContextDrawer({ quote, archetypeColor, onClose }: { quote: Quote; arche
 
   return (
     <motion.div
+      data-no-pull-refresh
       initial={{ opacity: 0, y: 28 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 28 }}
