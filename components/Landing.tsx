@@ -24,7 +24,7 @@ export default function Landing() {
         className="relative z-10 flex flex-col items-center gap-10 text-center max-w-xs"
       >
         <div className="space-y-1">
-          <p className="text-[10px] tracking-[0.4em] text-[#444] uppercase">imprint</p>
+          <p className="text-[10px] tracking-[0.4em] text-[#444] uppercase">sharper</p>
           <div className="w-4 h-px bg-[#c9a96e] mx-auto mt-3" />
         </div>
 
