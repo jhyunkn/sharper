@@ -5,54 +5,38 @@ import { useEffect, useRef, useState } from 'react';
 const TRIGGER_DISTANCE = 88;
 const MAX_PULL_DISTANCE = 132;
 
-type ScrollRoot = Window | HTMLElement;
-
-function getScrollRoot(target: EventTarget | null): ScrollRoot {
-  if (!(target instanceof Element)) return window;
-
-  const explicitRoot = target.closest('[data-scroll-root]');
-  if (explicitRoot instanceof HTMLElement) return explicitRoot;
-
-  let el: Element | null = target;
-  while (el && el !== document.body) {
-    if (el instanceof HTMLElement) {
-      const style = window.getComputedStyle(el);
-      const canScrollY = /(auto|scroll)/.test(style.overflowY) && el.scrollHeight > el.clientHeight;
-      if (canScrollY) return el;
-    }
-    el = el.parentElement;
-  }
-
-  return window;
-}
-
-function isAtTop(root: ScrollRoot | null) {
-  if (!root || root === window) return window.scrollY <= 0 && document.documentElement.scrollTop <= 0;
-  return root.scrollTop <= 0;
-}
-
 export default function PullToRefresh() {
   const startY = useRef<number | null>(null);
-  const rootRef = useRef<ScrollRoot | null>(null);
+  const scrollRoot = useRef<HTMLElement | null>(null);
   const pulling = useRef(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
+    const getRoot = (target: EventTarget | null) => {
+      if (target instanceof Element) {
+        const root = target.closest('[data-scroll-root]');
+        return root instanceof HTMLElement ? root : null;
+      }
+      return null;
+    };
+
+    const atTop = () => {
+      const root = scrollRoot.current;
+      if (root) return root.scrollTop <= 0;
+      return window.scrollY <= 0 && document.documentElement.scrollTop <= 0;
+    };
+
     const onTouchStart = (event: TouchEvent) => {
       if (refreshing) return;
-
-      const root = getScrollRoot(event.target);
-      if (!isAtTop(root)) return;
-
-      rootRef.current = root;
+      scrollRoot.current = getRoot(event.target);
+      if (!atTop()) return;
       startY.current = event.touches[0]?.clientY ?? null;
       pulling.current = false;
     };
 
     const onTouchMove = (event: TouchEvent) => {
-      if (refreshing || startY.current === null) return;
-      if (!isAtTop(rootRef.current)) return;
+      if (refreshing || startY.current === null || !atTop()) return;
 
       const currentY = event.touches[0]?.clientY ?? startY.current;
       const delta = currentY - startY.current;
@@ -60,15 +44,18 @@ export default function PullToRefresh() {
 
       pulling.current = true;
       event.preventDefault();
+      setPullDistance(Math.min(MAX_PULL_DISTANCE, Math.round(delta * 0.58)));
+    };
 
-      const eased = Math.min(MAX_PULL_DISTANCE, Math.round(delta * 0.58));
-      setPullDistance(eased);
+    const reset = () => {
+      pulling.current = false;
+      startY.current = null;
+      scrollRoot.current = null;
     };
 
     const onTouchEnd = () => {
       if (!pulling.current) {
-        startY.current = null;
-        rootRef.current = null;
+        reset();
         return;
       }
 
@@ -79,10 +66,7 @@ export default function PullToRefresh() {
       } else {
         setPullDistance(0);
       }
-
-      pulling.current = false;
-      startY.current = null;
-      rootRef.current = null;
+      reset();
     };
 
     window.addEventListener('touchstart', onTouchStart, { passive: true });
