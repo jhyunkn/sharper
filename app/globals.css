@@ -3,12 +3,12 @@
 @theme inline {
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-serif: var(--font-playfair), Georgia, serif;
-  --color-bg: #080808;
-  --color-surface: #111111;
-  --color-border: #1e1e1e;
-  --color-muted: #444444;
+  --color-bg: #12110d;
+  --color-surface: #1a1813;
+  --color-border: #29261f;
+  --color-muted: #5f594d;
   --color-text: #f5f0e8;
-  --color-dim: #888888;
+  --color-dim: #a39a8a;
   --color-gold: #c9a96e;
 }
 
@@ -19,10 +19,16 @@
 
 html,
 body {
-  background: #080808;
+  background: #12110d;
   color: #f5f0e8;
   height: 100%;
   overscroll-behavior: none;
+}
+
+body {
+  background:
+    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(201, 169, 110, 0.055), transparent 62%),
+    linear-gradient(180deg, #15140f 0%, #12110d 44%, #0f0e0b 100%);
 }
 
 ::selection {
