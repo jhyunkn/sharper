@@ -65,6 +65,28 @@ function DomainPill({ category, color }: { category: string; color: string }) {
   );
 }
 
+function AnalyticalThemeRow({ themes, color }: { themes: string[]; color: string }) {
+  if (!themes.length) return null;
+
+  return (
+    <div className="absolute bottom-8 left-8 right-20 flex flex-wrap gap-2">
+      {themes.slice(0, 4).map((theme) => (
+        <span
+          key={theme}
+          className="rounded-full border px-2.5 py-1 text-[8px] tracking-[0.26em] uppercase"
+          style={{
+            color: `${color}cc`,
+            borderColor: `${color}33`,
+            backgroundColor: `${color}0d`,
+          }}
+        >
+          {theme}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function SaveButton({ saved, onToggle, color }: { saved: boolean; onToggle: () => void; color: string }) {
   return (
     <button onClick={onToggle} className="flex h-11 w-11 items-center justify-center" aria-label={saved ? 'Unsave' : 'Save'}>
@@ -109,7 +131,7 @@ function QuoteCard({ quote, isActive, archetypeColor, onToggleSave }: {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="absolute inset-0 flex flex-col px-8"
-            style={{ paddingTop: '24dvh', paddingBottom: '7rem' }}
+            style={{ paddingTop: '24dvh', paddingBottom: '9rem' }}
             onClick={() => hasContext && setContextOpen(true)}
           >
             <DomainPill category={quote.category} color={color} />
@@ -123,6 +145,7 @@ function QuoteCard({ quote, isActive, archetypeColor, onToggleSave }: {
                 <p className="mt-1 text-[10px] text-[#746d60]">{quote.authorTitle}</p>
               </div>
             </div>
+            <AnalyticalThemeRow themes={quote.themes || []} color={color} />
             <div className="absolute bottom-20 right-4" onClick={(event) => event.stopPropagation()}>
               <SaveButton saved={saved} onToggle={handleToggleSave} color={color} />
             </div>
@@ -149,6 +172,10 @@ function QuoteCard({ quote, isActive, archetypeColor, onToggleSave }: {
 
               <p className="font-serif text-[1.2rem] leading-[1.55] text-[#746d60]">{quote.text}</p>
               <p className="mt-4 text-[11px] tracking-wide text-[#746d60]">{quote.author}</p>
+
+              <div className="mt-8">
+                <AnalyticalThemeRow themes={quote.themes || []} color={color} />
+              </div>
 
               <div className="mt-10 space-y-10">
                 {quote.historicalContext && (
