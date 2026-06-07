@@ -31,6 +31,11 @@ body {
     linear-gradient(180deg, #15140f 0%, #12110d 44%, #0f0e0b 100%);
 }
 
+.bg-\[\#080808\],
+.bg-\[\#050505\] {
+  background-color: #12110d !important;
+}
+
 ::selection {
   background: #c9a96e33;
 }
