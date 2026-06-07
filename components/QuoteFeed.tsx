@@ -97,14 +97,14 @@ function SculptureLayer({ visualIndex }: { visualIndex: number }) {
   if (!image) return null;
 
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.26] mix-blend-luminosity">
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
       <img
         src={image}
         alt=""
         aria-hidden="true"
-        className="absolute -right-16 top-8 h-[62%] w-[88%] rounded-[45%] object-cover object-center blur-[0.2px]"
+        className="absolute -right-10 top-4 h-[70%] w-[96%] rounded-[44%] object-cover object-center opacity-70 mix-blend-luminosity contrast-125 brightness-110"
       />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_70%_at_78%_34%,transparent_0%,rgba(18,17,13,0.28)_44%,rgba(18,17,13,0.92)_78%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_92%_72%_at_76%_31%,transparent_0%,rgba(18,17,13,0.12)_42%,rgba(18,17,13,0.72)_76%)]" />
     </div>
   );
 }
@@ -139,7 +139,7 @@ function QuoteCard({ quote, isActive, archetypeColor, onToggleSave, visualIndex 
       }}
     >
       <SculptureLayer visualIndex={visualIndex} />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(18,17,13,0.88)_0%,rgba(18,17,13,0.7)_48%,rgba(18,17,13,0.42)_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(18,17,13,0.92)_0%,rgba(18,17,13,0.68)_46%,rgba(18,17,13,0.16)_100%)]" />
 
       <AnimatePresence mode="wait">
         {!contextOpen ? (
