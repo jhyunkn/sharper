@@ -5,7 +5,9 @@ import { useEffect, useRef, useState } from 'react';
 const TRIGGER_DISTANCE = 88;
 const MAX_PULL_DISTANCE = 132;
 
-function getScrollRoot(target: EventTarget | null): Window | HTMLElement {
+type ScrollRoot = Window | HTMLElement;
+
+function getScrollRoot(target: EventTarget | null): ScrollRoot {
   if (!(target instanceof Element)) return window;
 
   const explicitRoot = target.closest('[data-scroll-root]');
@@ -24,14 +26,14 @@ function getScrollRoot(target: EventTarget | null): Window | HTMLElement {
   return window;
 }
 
-function isAtTop(root: Window | HTMLElement) {
-  if (root === window) return window.scrollY <= 0 && document.documentElement.scrollTop <= 0;
+function isAtTop(root: ScrollRoot | null) {
+  if (!root || root === window) return window.scrollY <= 0 && document.documentElement.scrollTop <= 0;
   return root.scrollTop <= 0;
 }
 
 export default function PullToRefresh() {
   const startY = useRef<number | null>(null);
-  const rootRef = useRef<Window | HTMLElement>(window);
+  const rootRef = useRef<ScrollRoot | null>(null);
   const pulling = useRef(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -66,6 +68,7 @@ export default function PullToRefresh() {
     const onTouchEnd = () => {
       if (!pulling.current) {
         startY.current = null;
+        rootRef.current = null;
         return;
       }
 
@@ -79,6 +82,7 @@ export default function PullToRefresh() {
 
       pulling.current = false;
       startY.current = null;
+      rootRef.current = null;
     };
 
     window.addEventListener('touchstart', onTouchStart, { passive: true });
