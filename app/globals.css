@@ -36,6 +36,11 @@ body {
   background-color: #12110d !important;
 }
 
+.overflow-y-auto {
+  touch-action: pan-y !important;
+  -webkit-overflow-scrolling: touch;
+}
+
 .text-\[\#888\] {
   color: #b2a997 !important;
 }
