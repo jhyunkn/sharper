@@ -191,90 +191,100 @@ export default function SavedCards() {
   };
 
   return (
-    <div className="min-h-screen pb-24">
-      <div className="px-6 pt-14 pb-8">
-        <p className="text-[10px] tracking-[0.35em] text-[#333] uppercase mb-2">sharper</p>
-        <h1 className="font-serif text-2xl text-[#f5f0e8]">Saved</h1>
-        {savedQuotes.length > 0 && (
-          <p className="text-xs text-[#444] mt-1">
-            {savedQuotes.length} thought{savedQuotes.length !== 1 ? 's' : ''}
-          </p>
-        )}
-      </div>
+    <div className="fixed inset-0 overflow-hidden bg-[#080808]">
+      <main
+        data-scroll-root="saved"
+        className="absolute inset-x-0 top-0 bottom-[calc(4.9rem+env(safe-area-inset-bottom))] overflow-y-auto"
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehaviorY: 'contain',
+          scrollbarWidth: 'none',
+        } as React.CSSProperties}
+      >
+        <div className="px-6 pt-14 pb-8">
+          <p className="text-[10px] tracking-[0.35em] text-[#333] uppercase mb-2">sharper</p>
+          <h1 className="font-serif text-2xl text-[#f5f0e8]">Saved</h1>
+          {savedQuotes.length > 0 && (
+            <p className="text-xs text-[#444] mt-1">
+              {savedQuotes.length} thought{savedQuotes.length !== 1 ? 's' : ''}
+            </p>
+          )}
+        </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center pt-16">
-          <p className="text-xs text-[#333]">Loading…</p>
-        </div>
-      ) : savedQuotes.length === 0 ? (
-        <div className="flex flex-col items-center justify-center px-8 pt-16 text-center gap-4">
-          <p className="text-4xl opacity-20">☽</p>
-          <p className="text-sm text-[#333] leading-relaxed">
-            Nothing saved yet.
-            <br />
-            Bookmark thoughts that move you.
-          </p>
-        </div>
-      ) : (
-        <div className="px-6 space-y-3">
-          {savedQuotes.map((quote, i) => {
-            const hasContext = !!(quote.historicalContext || quote.meaning || quote.whyItMatters);
-            const color = DOMAIN_COLOR[quote.category] ?? archetypeColor;
-            return (
-              <motion.div
-                key={quote.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.04, duration: 0.4 }}
-                className="border border-[#1a1a1a] p-5 space-y-3 group relative"
-                onClick={() => hasContext && setExpandedQuote(quote)}
-                style={{ cursor: hasContext ? 'pointer' : 'default' }}
-              >
-                <p
-                  className="text-[9px] tracking-[0.3em] uppercase"
-                  style={{ color: color + '80' }}
+        {loading ? (
+          <div className="flex items-center justify-center pt-16">
+            <p className="text-xs text-[#333]">Loading…</p>
+          </div>
+        ) : savedQuotes.length === 0 ? (
+          <div className="flex flex-col items-center justify-center px-8 pt-16 text-center gap-4">
+            <p className="text-4xl opacity-20">☽</p>
+            <p className="text-sm text-[#333] leading-relaxed">
+              Nothing saved yet.
+              <br />
+              Bookmark thoughts that move you.
+            </p>
+          </div>
+        ) : (
+          <div className="px-6 space-y-3 pb-8">
+            {savedQuotes.map((quote, i) => {
+              const hasContext = !!(quote.historicalContext || quote.meaning || quote.whyItMatters);
+              const color = DOMAIN_COLOR[quote.category] ?? archetypeColor;
+              return (
+                <motion.div
+                  key={quote.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04, duration: 0.4 }}
+                  className="border border-[#1a1a1a] p-5 space-y-3 group relative"
+                  onClick={() => hasContext && setExpandedQuote(quote)}
+                  style={{ cursor: hasContext ? 'pointer' : 'default' }}
                 >
-                  {DOMAIN_LABEL[quote.category] ?? quote.category}
-                </p>
-                <blockquote className="font-serif text-base leading-relaxed text-[#d0cbc2]">
-                  &ldquo;{quote.text}&rdquo;
-                </blockquote>
-                <div className="flex items-end justify-between">
-                  <div>
-                    <p className="text-xs text-[#888]">{quote.author}</p>
-                    <p className="text-[10px] text-[#333]">{quote.authorTitle}</p>
+                  <p
+                    className="text-[9px] tracking-[0.3em] uppercase"
+                    style={{ color: color + '80' }}
+                  >
+                    {DOMAIN_LABEL[quote.category] ?? quote.category}
+                  </p>
+                  <blockquote className="font-serif text-base leading-relaxed text-[#d0cbc2]">
+                    &ldquo;{quote.text}&rdquo;
+                  </blockquote>
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <p className="text-xs text-[#888]">{quote.author}</p>
+                      <p className="text-[10px] text-[#333]">{quote.authorTitle}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {/* Breathing dots if context is available */}
+                      {hasContext && (
+                        <div className="flex items-center gap-[4px]">
+                          {[0, 0.4, 0.8].map((delay, di) => (
+                            <motion.span
+                              key={di}
+                              className="block w-[3px] h-[3px] rounded-full"
+                              style={{ background: color }}
+                              animate={{ opacity: [0.15, 0.45, 0.15] }}
+                              transition={{ duration: 2.4, repeat: Infinity, delay, ease: 'easeInOut' }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleUnsave(quote.id); }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 text-[#333] hover:text-[#888]"
+                        aria-label="Remove"
+                      >
+                        <BookmarkX size={14} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {/* Breathing dots if context is available */}
-                    {hasContext && (
-                      <div className="flex items-center gap-[4px]">
-                        {[0, 0.4, 0.8].map((delay, di) => (
-                          <motion.span
-                            key={di}
-                            className="block w-[3px] h-[3px] rounded-full"
-                            style={{ background: color }}
-                            animate={{ opacity: [0.15, 0.45, 0.15] }}
-                            transition={{ duration: 2.4, repeat: Infinity, delay, ease: 'easeInOut' }}
-                          />
-                        ))}
-                      </div>
-                    )}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleUnsave(quote.id); }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 text-[#333] hover:text-[#888]"
-                      aria-label="Remove"
-                    >
-                      <BookmarkX size={14} />
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      )}
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </main>
 
-      <BottomNav />
+      <BottomNav docked />
 
       <AnimatePresence>
         {expandedQuote && (
