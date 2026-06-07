@@ -8,6 +8,7 @@ import { getProfile, isQuoteSaved, markViewed, saveQuote, unsaveQuote } from '@/
 import { bumpCardQuality, fetchCards } from '@/lib/cards';
 import { getArchetype } from '@/lib/archetypes';
 import { Quote } from '@/lib/types';
+import { SCULPTURE_CARD_IMAGES } from '@/lib/sculptureAssets';
 import BottomNav from './BottomNav';
 
 const DOMAIN_COLOR: Record<string, string> = {
@@ -65,20 +66,16 @@ function DomainPill({ category, color }: { category: string; color: string }) {
   );
 }
 
-function AnalyticalThemeRow({ themes, color }: { themes: string[]; color: string }) {
+function AnalyticalThemeRow({ themes, color, floating = true }: { themes: string[]; color: string; floating?: boolean }) {
   if (!themes.length) return null;
 
   return (
-    <div className="absolute bottom-8 left-8 right-20 flex flex-wrap gap-2">
+    <div className={`${floating ? 'absolute bottom-8 left-8 right-20' : ''} flex flex-wrap gap-2`}>
       {themes.slice(0, 4).map((theme) => (
         <span
           key={theme}
           className="rounded-full border px-2.5 py-1 text-[8px] tracking-[0.26em] uppercase"
-          style={{
-            color: '#ede8df',
-            borderColor: `${color}33`,
-            backgroundColor: `${color}0d`,
-          }}
+          style={{ color: '#ede8df', borderColor: `${color}33`, backgroundColor: `${color}0d` }}
         >
           {theme}
         </span>
@@ -95,11 +92,29 @@ function SaveButton({ saved, onToggle, color }: { saved: boolean; onToggle: () =
   );
 }
 
-function QuoteCard({ quote, isActive, archetypeColor, onToggleSave }: {
+function SculptureLayer({ visualIndex }: { visualIndex: number }) {
+  const image = SCULPTURE_CARD_IMAGES[visualIndex % SCULPTURE_CARD_IMAGES.length];
+  if (!image) return null;
+
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.26] mix-blend-luminosity">
+      <img
+        src={image}
+        alt=""
+        aria-hidden="true"
+        className="absolute -right-16 top-8 h-[62%] w-[88%] rounded-[45%] object-cover object-center blur-[0.2px]"
+      />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_70%_at_78%_34%,transparent_0%,rgba(18,17,13,0.28)_44%,rgba(18,17,13,0.92)_78%)]" />
+    </div>
+  );
+}
+
+function QuoteCard({ quote, isActive, archetypeColor, onToggleSave, visualIndex }: {
   quote: Quote;
   isActive: boolean;
   archetypeColor: string;
   onToggleSave: (id: string) => void;
+  visualIndex: number;
 }) {
   const [saved, setSaved] = useState(false);
   const [contextOpen, setContextOpen] = useState(false);
@@ -123,6 +138,9 @@ function QuoteCard({ quote, isActive, archetypeColor, onToggleSave }: {
         boxShadow: '0 24px 80px rgba(0,0,0,0.28)',
       }}
     >
+      <SculptureLayer visualIndex={visualIndex} />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(18,17,13,0.88)_0%,rgba(18,17,13,0.7)_48%,rgba(18,17,13,0.42)_100%)]" />
+
       <AnimatePresence mode="wait">
         {!contextOpen ? (
           <motion.div
@@ -130,7 +148,7 @@ function QuoteCard({ quote, isActive, archetypeColor, onToggleSave }: {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 flex flex-col px-8"
+            className="absolute inset-0 z-10 flex flex-col px-8"
             style={{ paddingTop: '24dvh', paddingBottom: '9rem' }}
             onClick={() => hasContext && setContextOpen(true)}
           >
@@ -157,7 +175,7 @@ function QuoteCard({ quote, isActive, archetypeColor, onToggleSave }: {
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 18 }}
-            className="absolute inset-0 overflow-y-auto bg-[#12110d]"
+            className="absolute inset-0 z-20 overflow-y-auto bg-[#12110d]"
             style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' } as React.CSSProperties}
           >
             <div className="px-8 pt-12 pb-[calc(8rem+env(safe-area-inset-bottom))]">
@@ -174,7 +192,7 @@ function QuoteCard({ quote, isActive, archetypeColor, onToggleSave }: {
               <p className="mt-4 text-[11px] tracking-wide text-[#746d60]">{quote.author}</p>
 
               <div className="mt-8">
-                <AnalyticalThemeRow themes={quote.themes || []} color={color} />
+                <AnalyticalThemeRow themes={quote.themes || []} color={color} floating={false} />
               </div>
 
               <div className="mt-10 space-y-10">
@@ -272,6 +290,7 @@ export default function QuoteFeed() {
               isActive={index === activeIndex}
               archetypeColor={archetypeColor}
               onToggleSave={handleToggleSave}
+              visualIndex={index}
             />
           </div>
         ))}
