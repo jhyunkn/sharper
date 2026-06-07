@@ -13,12 +13,19 @@ export default function PullToRefresh() {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
+    const getElement = (target: EventTarget | null) => {
+      return target instanceof Element ? target : null;
+    };
+
+    const isBlocked = (target: EventTarget | null) => {
+      return !!getElement(target)?.closest('[data-no-pull-refresh]');
+    };
+
     const getRoot = (target: EventTarget | null) => {
-      if (target instanceof Element) {
-        const root = target.closest('[data-scroll-root]');
-        return root instanceof HTMLElement ? root : null;
-      }
-      return null;
+      const element = getElement(target);
+      if (!element) return null;
+      const root = element.closest('[data-scroll-root]');
+      return root instanceof HTMLElement ? root : null;
     };
 
     const atTop = () => {
@@ -28,7 +35,7 @@ export default function PullToRefresh() {
     };
 
     const onTouchStart = (event: TouchEvent) => {
-      if (refreshing) return;
+      if (refreshing || isBlocked(event.target)) return;
       scrollRoot.current = getRoot(event.target);
       if (!atTop()) return;
       startY.current = event.touches[0]?.clientY ?? null;
@@ -36,7 +43,7 @@ export default function PullToRefresh() {
     };
 
     const onTouchMove = (event: TouchEvent) => {
-      if (refreshing || startY.current === null || !atTop()) return;
+      if (refreshing || isBlocked(event.target) || startY.current === null || !atTop()) return;
 
       const currentY = event.touches[0]?.clientY ?? startY.current;
       const delta = currentY - startY.current;
