@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
+import PullToRefresh from '@/components/PullToRefresh';
 import './globals.css';
 
 const inter = Inter({
@@ -16,7 +17,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Imprint — Learn what matters',
+  title: 'Sharper',
   description: 'Philosophy. Psychology. Art. Architecture. One thought at a time.',
 };
 
@@ -30,7 +31,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} h-full`}>
-      <body className="h-full antialiased">{children}</body>
+      <body className="h-full antialiased">
+        <PullToRefresh />
+        {children}
+      </body>
     </html>
   );
 }
