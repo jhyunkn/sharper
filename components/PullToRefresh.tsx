@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 
 const TRIGGER_DISTANCE = 88;
-const MAX_PULL_DISTANCE = 132;
+const MAX_PULL_DISTANCE = 150;
 
 export default function PullToRefresh() {
   const startY = useRef<number | null>(null);
   const scrollRoot = useRef<HTMLElement | null>(null);
   const pulling = useRef(false);
+  const reloadTimer = useRef<number | null>(null);
   const [pullDistance, setPullDistance] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -51,7 +52,7 @@ export default function PullToRefresh() {
 
       pulling.current = true;
       event.preventDefault();
-      setPullDistance(Math.min(MAX_PULL_DISTANCE, Math.round(delta * 0.58)));
+      setPullDistance(Math.min(MAX_PULL_DISTANCE, Math.round(delta * 0.62)));
     };
 
     const reset = () => {
@@ -68,8 +69,8 @@ export default function PullToRefresh() {
 
       if (pullDistance >= TRIGGER_DISTANCE) {
         setRefreshing(true);
-        setPullDistance(TRIGGER_DISTANCE);
-        window.location.reload();
+        setPullDistance(MAX_PULL_DISTANCE);
+        reloadTimer.current = window.setTimeout(() => window.location.reload(), 900);
       } else {
         setPullDistance(0);
       }
@@ -86,30 +87,109 @@ export default function PullToRefresh() {
       window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('touchcancel', onTouchEnd);
+      if (reloadTimer.current) window.clearTimeout(reloadTimer.current);
     };
   }, [pullDistance, refreshing]);
 
   const visible = pullDistance > 0 || refreshing;
   const progress = Math.min(1, pullDistance / TRIGGER_DISTANCE);
+  const overlayOpacity = refreshing ? 1 : Math.min(0.96, progress * 1.08);
+  const scale = refreshing ? 1 : 0.94 + progress * 0.06;
 
   return (
     <div
       aria-hidden={!visible}
-      className="pointer-events-none fixed left-0 right-0 top-0 z-[9999] flex justify-center transition-opacity duration-200"
-      style={{ opacity: visible ? 1 : 0 }}
+      className="pointer-events-none fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden transition-opacity duration-200"
+      style={{ opacity: visible ? overlayOpacity : 0 }}
     >
+      <style>{`
+        @keyframes oracle-grain {
+          0% { transform: translate(0, 0); }
+          20% { transform: translate(-1%, 1%); }
+          40% { transform: translate(1%, -1%); }
+          60% { transform: translate(-0.5%, -0.5%); }
+          80% { transform: translate(0.5%, 1%); }
+          100% { transform: translate(0, 0); }
+        }
+        @keyframes oracle-breath {
+          0%, 100% { transform: scale(0.92); opacity: 0.32; }
+          44%, 62% { transform: scale(1.04); opacity: 0.9; }
+        }
+        @keyframes oracle-turn {
+          0% { transform: rotate(0deg) scale(0.95); opacity: 0.12; }
+          42% { transform: rotate(84deg) scale(1.18); opacity: 0.62; }
+          68% { transform: rotate(120deg) scale(0.92); opacity: 0.42; }
+          100% { transform: rotate(180deg) scale(0.95); opacity: 0.12; }
+        }
+        @keyframes oracle-focus {
+          0%, 100% { filter: blur(5px); transform: scale(0.65); opacity: 0.2; }
+          48%, 66% { filter: blur(0); transform: scale(1); opacity: 1; }
+        }
+      `}</style>
+
       <div
-        className="mt-4 flex h-10 w-10 items-center justify-center rounded-full border border-[#c9a96e]/35 bg-[#080808]/82 shadow-[0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-md transition-transform duration-150"
-        style={{ transform: `translateY(${Math.max(0, pullDistance - 48)}px)` }}
+        className="absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(circle at 50% -8%, rgba(216,191,120,0.09), transparent 34%), radial-gradient(circle at 88% 12%, rgba(244,237,224,0.045), transparent 28%), radial-gradient(circle at 15% 100%, rgba(181,154,91,0.07), transparent 38%), #080705',
+        }}
+      />
+      <div
+        className="absolute inset-[-20%] mix-blend-screen opacity-[0.11]"
+        style={{
+          backgroundImage:
+            'repeating-radial-gradient(circle at 23% 31%, rgba(255,255,255,0.045) 0 1px, transparent 1px 5px)',
+          animation: 'oracle-grain 8s steps(8) infinite',
+        }}
+      />
+
+      <main
+        className="relative flex min-h-full w-full items-center justify-center overflow-hidden border border-[#d8bf78]/[0.18] bg-[#0e0b09]/75"
+        style={{
+          transform: `scale(${scale}) translateY(${refreshing ? 0 : Math.max(-18, -22 + progress * 22)}px)`,
+          backgroundImage: 'linear-gradient(145deg, rgba(244,237,224,0.045), transparent 43%)',
+        }}
       >
-        <div
-          className="h-4 w-4 rounded-full border border-[#c9a96e]/30 border-t-[#c9a96e]"
-          style={{
-            transform: `rotate(${refreshing ? 360 : progress * 270}deg)`,
-            transition: refreshing ? 'transform 0.55s linear' : 'transform 0.12s ease-out',
-          }}
-        />
-      </div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(181,154,91,0.10),transparent_42%),linear-gradient(180deg,transparent,rgba(0,0,0,0.14))]" />
+
+        <div className="relative z-10 px-6 py-10 text-center">
+          <div className="mb-4 font-mono text-[11px] uppercase tracking-[0.18em] text-[#d8bf78]">
+            00 / Previous 02 Preserved
+          </div>
+          <div className="mb-7 font-serif text-[15px] uppercase tracking-[0.28em] text-[#d8ccb8]">
+            Sharper
+          </div>
+
+          <div className="relative mx-auto grid h-[230px] w-[230px] place-items-center rounded-full sm:h-[270px] sm:w-[270px]">
+            <div className="absolute inset-0 rounded-full border border-[#d8bf78]/[0.14]" style={{ animation: 'oracle-breath 5.6s ease-in-out infinite' }}>
+              <div className="absolute inset-5 rounded-full border border-[#d8bf78]/[0.08]" />
+            </div>
+            {[0, 30, 60, 90].map((rotation, index) => (
+              <div
+                key={rotation}
+                className="absolute h-[92px] w-[92px] rounded-full border border-[#d8bf78]/[0.16]"
+                style={{
+                  clipPath: 'polygon(50% 0%,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0% 50%,38% 38%)',
+                  animation: `oracle-turn 5.6s cubic-bezier(0.19, 1, 0.22, 1) infinite`,
+                  animationDelay: `${index * 0.08}s`,
+                  transform: `rotate(${rotation}deg)`,
+                }}
+              />
+            ))}
+            <div
+              className="relative z-10 h-[54px] w-[54px] rounded-full border border-[#d8bf78]/40 bg-[radial-gradient(circle,rgba(216,191,120,0.22),transparent_66%)]"
+              style={{ animation: 'oracle-focus 5.6s cubic-bezier(0.19, 1, 0.22, 1) infinite' }}
+            />
+          </div>
+
+          <div className="mt-8 font-serif text-[22px] font-light text-[rgba(245,236,221,0.58)] sm:text-[24px]">
+            Bringing the image into focus
+          </div>
+          <div className="mx-auto mt-2 max-w-[340px] font-serif text-[16px] leading-[1.34] text-[rgba(245,236,221,0.42)]">
+            Isolated standalone preview of the original Oracle Aperture animation.
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
