@@ -25,10 +25,10 @@ const DOMAIN_LABEL: Record<string, string> = {
 
 function quoteSize(text: string) {
   const n = text.length;
-  if (n < 70) return 'text-[2.45rem] leading-[1.3]';
-  if (n < 130) return 'text-[2.1rem] leading-[1.36]';
-  if (n < 200) return 'text-[1.8rem] leading-[1.42]';
-  return 'text-[1.55rem] leading-[1.5]';
+  if (n < 70) return 'text-[2.35rem] leading-[1.28]';
+  if (n < 130) return 'text-[2rem] leading-[1.34]';
+  if (n < 200) return 'text-[1.68rem] leading-[1.42]';
+  return 'text-[1.42rem] leading-[1.48]';
 }
 
 function DomainPill({ category, color }: { category: string; color: string }) {
@@ -41,11 +41,10 @@ function DomainPill({ category, color }: { category: string; color: string }) {
 
 function ThemePills({ themes, color }: { themes: string[]; color: string }) {
   if (!themes.length) return null;
-
   return (
     <div className="flex flex-wrap gap-2">
-      {themes.slice(0, 4).map((theme) => (
-        <span key={theme} className="rounded-full border px-2.5 py-1 text-[8px] tracking-[0.26em] uppercase" style={{ color: '#ede8df', borderColor: `${color}33`, backgroundColor: `${color}0d` }}>
+      {themes.slice(0, 3).map((theme) => (
+        <span key={theme} className="rounded-full border px-2.5 py-1 text-[8px] tracking-[0.24em] uppercase" style={{ color: '#ede8df', borderColor: `${color}33`, backgroundColor: `${color}0d` }}>
           {theme}
         </span>
       ))}
@@ -55,12 +54,12 @@ function ThemePills({ themes, color }: { themes: string[]; color: string }) {
 
 function QuoteMeta({ quote, color }: { quote: Quote; color: string }) {
   return (
-    <div className="absolute bottom-8 left-8 right-20 space-y-3 border-t border-[#29261f]/70 pt-4">
+    <div className="space-y-3 border-t border-[#29261f]/70 pt-4 pr-12">
       <div className="flex items-start gap-3">
         <div className="mt-1 h-7 w-px shrink-0" style={{ background: `linear-gradient(to bottom, ${color}80, transparent)` }} />
         <div className="min-w-0">
           <p className="text-[13px] tracking-wide text-[#b2a997]">{quote.author}</p>
-          <p className="mt-1 text-[10px] leading-snug text-[#746d60]">{quote.authorTitle}</p>
+          <p className="mt-1 max-w-[14rem] text-[10px] leading-snug text-[#746d60]">{quote.authorTitle}</p>
         </div>
       </div>
       <ThemePills themes={quote.themes || []} color={color} />
@@ -79,14 +78,9 @@ function SaveButton({ saved, onToggle, color }: { saved: boolean; onToggle: () =
 function SculptureLayer({ visualIndex }: { visualIndex: number }) {
   const image = SCULPTURE_CARD_IMAGES[visualIndex % SCULPTURE_CARD_IMAGES.length];
   if (!image) return null;
-
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      <div
-        aria-hidden="true"
-        className="absolute -right-10 top-4 h-[70%] w-[96%] rounded-[44%] bg-cover bg-center opacity-70 mix-blend-luminosity contrast-125 brightness-110"
-        style={{ backgroundImage: `url(${image})` }}
-      />
+      <div aria-hidden="true" className="absolute -right-10 top-4 h-[70%] w-[96%] rounded-[44%] bg-cover bg-center opacity-70 mix-blend-luminosity contrast-125 brightness-110" style={{ backgroundImage: `url(${image})` }} />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_92%_72%_at_76%_31%,transparent_0%,rgba(18,17,13,0.12)_42%,rgba(18,17,13,0.72)_76%)]" />
     </div>
   );
@@ -113,11 +107,15 @@ function QuoteCard({ quote, isActive, archetypeColor, onToggleSave, visualIndex 
 
       <AnimatePresence mode="wait">
         {!contextOpen ? (
-          <motion.div key="quote-face" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-10 flex flex-col px-8" style={{ paddingTop: '24dvh', paddingBottom: '11rem' }} onClick={() => hasContext && setContextOpen(true)}>
-            <DomainPill category={quote.category} color={color} />
-            <blockquote className={`mt-10 font-serif text-[#ede8df] ${quoteSize(quote.text)}`}>{quote.text}</blockquote>
-            <QuoteMeta quote={quote} color={color} />
-            <div className="absolute bottom-20 right-4" onClick={(event) => event.stopPropagation()}>
+          <motion.div key="quote-face" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-10 flex flex-col px-8 pt-[18dvh] pb-8" onClick={() => hasContext && setContextOpen(true)}>
+            <div className="shrink-0">
+              <DomainPill category={quote.category} color={color} />
+              <blockquote className={`mt-8 font-serif text-[#ede8df] ${quoteSize(quote.text)}`}>{quote.text}</blockquote>
+            </div>
+            <div className="mt-auto pt-8">
+              <QuoteMeta quote={quote} color={color} />
+            </div>
+            <div className="absolute bottom-8 right-4" onClick={(event) => event.stopPropagation()}>
               <SaveButton saved={saved} onToggle={handleToggleSave} color={color} />
             </div>
           </motion.div>
