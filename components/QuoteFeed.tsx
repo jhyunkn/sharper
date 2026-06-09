@@ -25,10 +25,10 @@ const DOMAIN_LABEL: Record<string, string> = {
 
 function quoteSize(text: string) {
   const n = text.length;
-  if (n < 70) return 'text-[2.35rem] leading-[1.28]';
-  if (n < 130) return 'text-[2rem] leading-[1.34]';
-  if (n < 200) return 'text-[1.68rem] leading-[1.42]';
-  return 'text-[1.42rem] leading-[1.48]';
+  if (n < 70) return 'text-[1.2rem] leading-[1.38]';
+  if (n < 130) return 'text-[1.05rem] leading-[1.46]';
+  if (n < 200) return 'text-[0.95rem] leading-[1.52]';
+  return 'text-[0.86rem] leading-[1.58]';
 }
 
 function DomainPill({ category, color }: { category: string; color: string }) {
@@ -54,7 +54,7 @@ function ThemePills({ themes, color }: { themes: string[]; color: string }) {
 
 function QuoteMeta({ quote, color }: { quote: Quote; color: string }) {
   return (
-    <div className="space-y-3 border-t border-[#29261f]/70 pt-4 pr-12">
+    <div className="mt-6 space-y-3 border-t border-[#29261f]/70 pt-4 pr-12">
       <div className="flex items-start gap-3">
         <div className="mt-1 h-7 w-px shrink-0" style={{ background: `linear-gradient(to bottom, ${color}80, transparent)` }} />
         <div className="min-w-0">
@@ -107,14 +107,10 @@ function QuoteCard({ quote, isActive, archetypeColor, onToggleSave, visualIndex 
 
       <AnimatePresence mode="wait">
         {!contextOpen ? (
-          <motion.div key="quote-face" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-10 flex flex-col px-8 pt-[18dvh] pb-8" onClick={() => hasContext && setContextOpen(true)}>
-            <div className="shrink-0">
-              <DomainPill category={quote.category} color={color} />
-              <blockquote className={`mt-8 font-serif text-[#ede8df] ${quoteSize(quote.text)}`}>{quote.text}</blockquote>
-            </div>
-            <div className="mt-auto pt-8">
-              <QuoteMeta quote={quote} color={color} />
-            </div>
+          <motion.div key="quote-face" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-10 flex flex-col px-8 pt-8 pb-8" onClick={() => hasContext && setContextOpen(true)}>
+            <DomainPill category={quote.category} color={color} />
+            <blockquote className={`mt-7 max-w-[15rem] font-serif text-[#ede8df] ${quoteSize(quote.text)}`}>{quote.text}</blockquote>
+            <QuoteMeta quote={quote} color={color} />
             <div className="absolute bottom-8 right-4" onClick={(event) => event.stopPropagation()}>
               <SaveButton saved={saved} onToggle={handleToggleSave} color={color} />
             </div>
