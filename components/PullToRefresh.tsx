@@ -16,12 +16,11 @@ export default function PullToRefresh() {
   useEffect(() => {
     if (!refreshing) return;
 
-    const dismissTimer = window.setTimeout(() => {
-      setRefreshing(false);
-      setPullDistance(0);
+    const refreshTimer = window.setTimeout(() => {
+      window.location.reload();
     }, REFRESH_HOLD_MS);
 
-    return () => window.clearTimeout(dismissTimer);
+    return () => window.clearTimeout(refreshTimer);
   }, [refreshing]);
 
   useEffect(() => {
