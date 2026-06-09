@@ -10,9 +10,19 @@ export default function PullToRefresh() {
   const startY = useRef<number | null>(null);
   const scrollRoot = useRef<HTMLElement | null>(null);
   const pulling = useRef(false);
-  const reloadTimer = useRef<number | null>(null);
   const [pullDistance, setPullDistance] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (!refreshing) return;
+
+    const dismissTimer = window.setTimeout(() => {
+      setRefreshing(false);
+      setPullDistance(0);
+    }, REFRESH_HOLD_MS);
+
+    return () => window.clearTimeout(dismissTimer);
+  }, [refreshing]);
 
   useEffect(() => {
     const getElement = (target: EventTarget | null) => target instanceof Element ? target : null;
@@ -61,10 +71,6 @@ export default function PullToRefresh() {
       if (pullDistance >= TRIGGER_DISTANCE) {
         setRefreshing(true);
         setPullDistance(MAX_PULL_DISTANCE);
-        reloadTimer.current = window.setTimeout(() => {
-          setRefreshing(false);
-          setPullDistance(0);
-        }, REFRESH_HOLD_MS);
       } else {
         setPullDistance(0);
       }
@@ -81,7 +87,6 @@ export default function PullToRefresh() {
       window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('touchcancel', onTouchEnd);
-      if (reloadTimer.current) window.clearTimeout(reloadTimer.current);
     };
   }, [pullDistance, refreshing]);
 
