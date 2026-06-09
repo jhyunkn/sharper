@@ -61,7 +61,10 @@ export default function PullToRefresh() {
       if (pullDistance >= TRIGGER_DISTANCE) {
         setRefreshing(true);
         setPullDistance(MAX_PULL_DISTANCE);
-        reloadTimer.current = window.setTimeout(() => window.location.reload(), REFRESH_HOLD_MS);
+        reloadTimer.current = window.setTimeout(() => {
+          setRefreshing(false);
+          setPullDistance(0);
+        }, REFRESH_HOLD_MS);
       } else {
         setPullDistance(0);
       }
