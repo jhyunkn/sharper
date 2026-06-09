@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 
 const TRIGGER_DISTANCE = 88;
 const MAX_PULL_DISTANCE = 150;
+const REFRESH_HOLD_MS = 5000;
 
 export default function PullToRefresh() {
   const startY = useRef<number | null>(null);
@@ -70,7 +71,7 @@ export default function PullToRefresh() {
       if (pullDistance >= TRIGGER_DISTANCE) {
         setRefreshing(true);
         setPullDistance(MAX_PULL_DISTANCE);
-        reloadTimer.current = window.setTimeout(() => window.location.reload(), 900);
+        reloadTimer.current = window.setTimeout(() => window.location.reload(), REFRESH_HOLD_MS);
       } else {
         setPullDistance(0);
       }
@@ -153,13 +154,6 @@ export default function PullToRefresh() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(181,154,91,0.10),transparent_42%),linear-gradient(180deg,transparent,rgba(0,0,0,0.14))]" />
 
         <div className="relative z-10 px-6 py-10 text-center">
-          <div className="mb-4 font-mono text-[11px] uppercase tracking-[0.18em] text-[#d8bf78]">
-            00 / Previous 02 Preserved
-          </div>
-          <div className="mb-7 font-serif text-[15px] uppercase tracking-[0.28em] text-[#d8ccb8]">
-            Sharper
-          </div>
-
           <div className="relative mx-auto grid h-[230px] w-[230px] place-items-center rounded-full sm:h-[270px] sm:w-[270px]">
             <div className="absolute inset-0 rounded-full border border-[#d8bf78]/[0.14]" style={{ animation: 'oracle-breath 5.6s ease-in-out infinite' }}>
               <div className="absolute inset-5 rounded-full border border-[#d8bf78]/[0.08]" />
@@ -180,13 +174,6 @@ export default function PullToRefresh() {
               className="relative z-10 h-[54px] w-[54px] rounded-full border border-[#d8bf78]/40 bg-[radial-gradient(circle,rgba(216,191,120,0.22),transparent_66%)]"
               style={{ animation: 'oracle-focus 5.6s cubic-bezier(0.19, 1, 0.22, 1) infinite' }}
             />
-          </div>
-
-          <div className="mt-8 font-serif text-[22px] font-light text-[rgba(245,236,221,0.58)] sm:text-[24px]">
-            Bringing the image into focus
-          </div>
-          <div className="mx-auto mt-2 max-w-[340px] font-serif text-[16px] leading-[1.34] text-[rgba(245,236,221,0.42)]">
-            Isolated standalone preview of the original Oracle Aperture animation.
           </div>
         </div>
       </main>
